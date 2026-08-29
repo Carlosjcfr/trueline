@@ -1,0 +1,496 @@
+/*
+ * ProjectNotes styles.
+ * Widget rules adapted from Project Manager for Obsidian.
+ * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
+ */
+
+/* The two plugin tokens with no Obsidian equivalent. Both are theme-dependent and
+   overridden for dark mode in widgets.css; everything else uses theme variables directly. */
+.pn-root {
+  --pn-ghost-border: rgba(0, 0, 0, 0.06);
+  --pn-shadow-ambient: rgba(0, 0, 0, 0.06);
+
+  font-family: var(--font-interface);
+  color: var(--text-normal);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.pn-gantt-right::-webkit-scrollbar,
+.pn-kanban-board::-webkit-scrollbar,
+.pn-kanban-cards::-webkit-scrollbar,
+.pn-task-modal::-webkit-scrollbar,
+.pn-edit::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.pn-gantt-right::-webkit-scrollbar-track,
+.pn-kanban-board::-webkit-scrollbar-track,
+.pn-kanban-cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pn-gantt-right::-webkit-scrollbar-thumb,
+.pn-kanban-board::-webkit-scrollbar-thumb,
+.pn-kanban-cards::-webkit-scrollbar-thumb,
+.pn-task-modal::-webkit-scrollbar-thumb,
+.pn-edit::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 99px;
+}
+.pn-gantt-right::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.pn-segmented {
+  display: flex;
+  gap: 6px;
+}
+
+.pn-time-est-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.pn-time-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.pn-time-est-input {
+  width: 80px;
+}
+
+.pn-time-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.pn-time-log-list:empty {
+  display: none;
+}
+.pn-time-log-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 6px;
+  border-radius: var(--radius-s);
+  background: var(--background-modifier-hover);
+  border: 1px solid var(--pn-ghost-border);
+}
+.pn-time-log-date {
+  width: 120px;
+}
+.pn-time-log-hours {
+  width: 60px;
+  text-align: center;
+}
+.pn-time-log-note {
+  flex: 1;
+}
+
+.pn-kanban-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.pn-kanban-card-title-row .pn-kanban-card-title {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.pn-inline-edit {
+  padding: 3px 6px;
+  border: 1px solid var(--interactive-accent);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 13px;
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+  width: 100%;
+}
+
+.pn-gantt-drag-handle {
+  fill: rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    fill 0.15s;
+}
+.pn-gantt-bar-group:hover .pn-gantt-drag-handle {
+  opacity: 1;
+  fill: rgba(255, 255, 255, 0.25);
+}
+.pn-gantt-bar-group .pn-gantt-drag-handle:hover {
+  fill: rgba(255, 255, 255, 0.45);
+}
+.pn-gantt-bar-grabbing {
+  cursor: grabbing;
+}
+
+.pn-gantt-link-dot {
+  fill: transparent;
+  stroke: var(--interactive-accent);
+  stroke-width: 1.5;
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    fill 0.15s;
+  pointer-events: all;
+}
+.pn-gantt-bar-group:hover .pn-gantt-link-dot {
+  opacity: 0.5;
+}
+.pn-gantt-bar-group .pn-gantt-link-dot:hover {
+  opacity: 1;
+  fill: var(--interactive-accent);
+}
+.pn-gantt-bar-group .pn-gantt-link-dot--active {
+  opacity: 1;
+  fill: var(--interactive-accent);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 3px var(--interactive-accent));
+}
+
+.pn-gantt-milestone {
+  transition:
+    transform 0.15s,
+    filter 0.15s;
+}
+.pn-gantt-milestone:hover {
+  filter: brightness(1.2);
+}
+.pn-gantt-milestone-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.pn-gantt-bar-icon {
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.theme-dark .pn-root {
+  --pn-ghost-border: rgba(255, 255, 255, 0.06);
+  --pn-shadow-ambient: rgba(0, 0, 0, 0.15);
+}
+.theme-dark .pn-modal {
+  --pn-ghost-border: rgba(255, 255, 255, 0.06);
+  --pn-shadow-ambient: rgba(0, 0, 0, 0.15);
+}
+
+.pn-modal-desc-section {
+  position: relative;
+}
+.pn-modal-desc-preview {
+  padding: 6px 8px;
+  background: transparent;
+  border-radius: var(--radius-s);
+  border: 1px solid transparent;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 32px;
+  cursor: text;
+  user-select: text;
+}
+.pn-modal-desc-preview:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border);
+}
+.pn-modal-desc-preview p {
+  margin: 0 0 0.5em;
+}
+.pn-modal-desc-preview p:last-child {
+  margin-bottom: 0;
+}
+.pn-modal-desc-preview a {
+  color: var(--interactive-accent);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.pn-modal-desc-preview a:hover {
+  color: var(--interactive-accent-hover);
+}
+.pn-modal-desc-preview a.external-link {
+  color: var(--interactive-accent);
+}
+
+.pn-note-suggest {
+  position: absolute;
+  z-index: 300;
+  width: 280px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  box-shadow: 0 4px 16px var(--pn-shadow-ambient);
+  padding: 4px;
+  display: none;
+}
+.pn-note-suggest--visible {
+  display: block;
+}
+.pn-note-suggest-mirror {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  visibility: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+.pn-note-suggest-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.pn-note-suggest-item:hover {
+  background: var(--background-modifier-hover);
+}
+.pn-note-suggest-item--active {
+  background: color-mix(in srgb, var(--interactive-accent) 10%, transparent);
+}
+.pn-note-suggest-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.pn-note-suggest-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pn-note-suggest-type {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-faint);
+  background: var(--background-modifier-hover);
+  padding: 1px 5px;
+  border-radius: var(--radius-s);
+}
+.pn-note-suggest-path {
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pn-gantt-add-row .pn-prop-add {
+  margin-left: 20px;
+}
+
+/* A link the plugin draws to a note. No href, so the affordances are all from here. */
+.pn-note-link {
+  color: var(--text-accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+.pn-note-link:hover {
+  text-decoration: underline;
+}
+.pn-note-link:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-s);
+}
+
+.pn-picker-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  --pn-glyph-size: 15px;
+}
+
+/* ---- view chrome ------------------------------------------------------- */
+
+.pn-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-interface);
+}
+
+.pn-view-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-wrap: wrap;
+}
+
+.pn-project-picker {
+  max-width: 220px;
+}
+
+.pn-view-header .mod-cta {
+  margin-left: auto;
+}
+
+.pn-view-btn--pending {
+  opacity: 0.5;
+}
+
+.pn-view-body {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 14px 24px;
+}
+
+/* ---- table ------------------------------------------------------------- */
+
+.pn-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-ui-small);
+}
+
+.pn-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  position: sticky;
+  top: 0;
+  background: var(--background-primary);
+  z-index: 1;
+}
+
+.pn-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--background-modifier-border-hover);
+  vertical-align: middle;
+}
+
+.pn-table-row:hover {
+  background: var(--background-modifier-hover);
+}
+
+.pn-cell-status-icon {
+  width: 28px;
+}
+
+.pn-status-toggle {
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.pn-task-link {
+  cursor: pointer;
+}
+
+.pn-task-link:hover {
+  text-decoration: underline;
+}
+
+.pn-milestone-icon {
+  margin-right: 4px;
+  color: var(--text-accent);
+  display: inline-flex;
+  vertical-align: -2px;
+}
+
+.pn-cell-overdue {
+  color: var(--text-error);
+  font-weight: 500;
+}
+
+.pn-cell-progress {
+  min-width: 90px;
+}
+
+/* ---- task modal -------------------------------------------------------- */
+
+.pn-task-modal .modal-content {
+  padding-top: 4px;
+}
+
+.pn-task-title {
+  width: 100%;
+  font-size: var(--font-ui-larger);
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  padding: 6px 0;
+  margin-bottom: 8px;
+}
+
+.pn-task-title:focus {
+  outline: none;
+  border-bottom: 1px solid var(--interactive-accent);
+}
+
+.pn-prop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.pn-prop-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.pn-prop-label {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.pn-prop-label--with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pn-prop-label-icon {
+  display: inline-flex;
+}
+
+.pn-prop-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pn-prop-value input[type='text'],
+.pn-prop-value input[type='number'],
+.pn-prop-value input[type='date'] {
+  flex: 1;
+  min-width: 120px;
+}
+
+.pn-prop-value--progress input[type='range'] {
+  flex: 1;
+}
+
+.pn-chip--unresolved {
+  opacity: 0.55;
+  text-decoration: line-through;
+}

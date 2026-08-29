@@ -1,0 +1,9 @@
+{
+  "id": "projectnotes",
+  "name": "ProjectNotes",
+  "version": "0.1.0",
+  "minAppVersion": "1.13.0",
+  "description": "Project management over TaskNotes-spec data: one note per task, Gantt, Kanban and Table views, per-project fields, GitHub issue sync.",
+  "author": "Carlos",
+  "isDesktopOnly": false
+}
