@@ -87,17 +87,57 @@ Implementado:
 - `TaskStore`: índice por id estable y por ruta, resolución de wikilinks, escritura
   vía `processFrontMatter`, sin bucles de eco
 - `ProjectStore`: config por proyecto en el frontmatter, con herencia por el árbol
-- Vista de tabla con jerarquía derivada de `projects`
+- **Vista de tabla** con jerarquía derivada de `projects`
+- **Kanban** con arrastrar y soltar y orden fraccional estable
+- **Gantt** con zoom día→año, barras arrastrables y redimensionables, hitos, línea de
+  hoy y flechas de dependencia que respetan `reltype` y `gap`
+- **Reprogramación automática** de dependientes, con detección de ciclos
+- **Sincronización bidireccional con GitHub**: sondeo condicional con ETag, tabla de
+  decisión explícita, detección de conflictos y prevención de bucles
 - Modal de tarea con la rejilla de propiedades de PM y campos personalizados
+- Pestaña de ajustes completa
+- 49 tests
 
-Pendiente, por orden:
+Pendiente:
 
-1. Kanban (agrupar + drag & drop con `lexorank`)
-2. Puente con GitHub (`octokit`, polling con ETag, push de estado)
-3. Gantt (portar el de Project Manager)
-4. Recurrencia con `rrule` y estado por instancia
-5. Pestaña de ajustes
-6. Adaptador para la suite de conformidad de `tasknotes-spec`
+1. Recurrencia con `rrule` y estado por instancia
+2. Vista de calendario
+3. Adaptador para la suite de conformidad de `tasknotes-spec`
+4. GitHub Projects v2 (requiere GraphQL)
+
+## Sincronización con GitHub
+
+Tres campos en el frontmatter sostienen todo el mecanismo:
+
+| Campo | Qué guarda |
+|---|---|
+| `gh-issue` | `owner/repo#123`, la clave foránea |
+| `gh-updated-at` | el `updated_at` del issue en la última sincronización |
+| `gh-hash` | huella de los campos sincronizados en ese momento |
+
+Con eso se responde, sin estado en servidor, la única pregunta que importa: **desde
+que estuvimos de acuerdo, ¿quién ha cambiado?**
+
+| | GitHub sin cambios | GitHub cambió |
+|---|---|---|
+| **Vault sin cambios** | nada | recibir |
+| **Vault cambió** | enviar | conflicto → política configurada |
+
+La política por defecto es **marcar y no tocar**: la tarea aparece listada y decides
+tú. Escoger un ganador en silencio por trabajo ajeno es como los sincronizadores
+pierden datos y confianza.
+
+La prevención de bucles sale de los mismos campos: cada escritura nuestra reescribe
+también `gh-hash` y `gh-updated-at`, así que la pasada siguiente ve "nadie cambió" y
+se detiene.
+
+**Sondeo:** peticiones condicionales con ETag. Un 304 no consume cuota, así que sondear
+cada 60 s todo el día es prácticamente gratis.
+
+**Aviso sobre el token:** se guarda en `data.json`, un archivo de texto plano dentro
+del vault. Si sincronizas el vault o lo tienes en git, el token viaja con él. Usa un
+token de alcance reducido (fine-grained) limitado a los repos que necesites, con
+permiso de Issues de lectura y escritura, nunca un token clásico con permisos amplios.
 
 ## Licencias
 

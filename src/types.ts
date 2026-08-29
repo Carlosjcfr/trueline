@@ -123,6 +123,11 @@ export interface Task {
   customFields: Record<string, unknown>
   /** EXTENSION. `owner/repo#123` — the GitHub bridge's foreign key. */
   ghIssue?: string
+  /** EXTENSION. Fractional sort key for manual Kanban order. */
+  rank?: string
+  /** EXTENSION. Set by the GitHub bridge; see src/github/sync.ts. */
+  ghUpdatedAt?: string
+  ghHash?: string
 
   // -- not persisted -------------------------------------------------------
   /** Markdown body. Loaded lazily; undefined means "not read yet". */

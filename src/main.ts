@@ -5,11 +5,15 @@ import { ProjectStore } from './store/ProjectStore'
 import { ProjectView, PROJECT_VIEW_TYPE } from './views/ProjectView'
 import { openTaskModal } from './modals/TaskModal'
 import { createTask } from './store/create'
+import { GitHubSync, notifyReport, type SyncReport } from './github/sync'
+import { ProjectNotesSettingTab } from './settings/SettingsTab'
 
 export default class ProjectNotesPlugin extends Plugin {
   override settings: ProjectNotesSettings = DEFAULT_SETTINGS
   tasks!: TaskStore
   projects!: ProjectStore
+  github: GitHubSync | null = null
+  private pollHandle: number | null = null
 
   override async onload(): Promise<void> {
     await this.loadSettings()
@@ -63,10 +67,67 @@ export default class ProjectNotesPlugin extends Plugin {
       name: 'Crear tarea',
       callback: () => void this.createAndOpenTask()
     })
+
+    this.github = new GitHubSync(this.app, this.tasks, () => this.settings)
+
+    this.addCommand({
+      id: 'sync-github',
+      name: 'Sincronizar con GitHub',
+      callback: () => void this.syncGitHub().then((report) => report && notifyReport(report))
+    })
+
+    this.addSettingTab(new ProjectNotesSettingTab(this.app, this))
+
+    this.app.workspace.onLayoutReady(() => {
+      this.restartGitHubPolling()
+      if (this.settings.github.enabled && this.settings.github.syncOnStartup) {
+        void this.syncGitHub()
+      }
+    })
   }
 
   override onunload(): void {
-    // Views are torn down by Obsidian; the store holds no resources of its own.
+    this.stopGitHubPolling()
+  }
+
+  /**
+   * Runs one sync pass. Returns null when GitHub is not configured, so callers can tell
+   * "nothing happened because it is off" from "nothing happened because nothing changed".
+   */
+  async syncGitHub(): Promise<SyncReport | null> {
+    const github = this.settings.github
+    if (!this.github || !github.enabled) return null
+    if (!github.token || github.repos.length === 0) return null
+
+    return this.github.run({
+      direction: github.direction,
+      conflictPolicy: github.conflictPolicy,
+      importNewIssues: github.importNewIssues,
+      exportNewTasks: github.exportNewTasks,
+      repos: github.repos,
+      mapping: github.mapping
+    })
+  }
+
+  restartGitHubPolling(): void {
+    this.stopGitHubPolling()
+    const github = this.settings.github
+    if (!github.enabled || github.pollSeconds <= 0) return
+
+    // registerInterval hands the timer to Obsidian's lifecycle, so disabling the plugin
+    // cannot leave a poller running against someone's rate limit.
+    this.pollHandle = window.setInterval(
+      () => void this.syncGitHub(),
+      Math.max(30, github.pollSeconds) * 1000
+    )
+    this.registerInterval(this.pollHandle)
+  }
+
+  private stopGitHubPolling(): void {
+    if (this.pollHandle !== null) {
+      window.clearInterval(this.pollHandle)
+      this.pollHandle = null
+    }
   }
 
   async loadSettings(): Promise<void> {

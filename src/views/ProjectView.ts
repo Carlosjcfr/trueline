@@ -10,13 +10,16 @@ import { ItemView, setIcon, type WorkspaceLeaf } from 'obsidian'
 import type ProjectNotesPlugin from '../main'
 import type { Task, ViewMode } from '../types'
 import { renderTable } from './table/TableRenderer'
+import { renderKanban } from './kanban/KanbanView'
+import { renderGantt } from './gantt/GanttView'
+import type { Granularity } from './gantt/timeline'
 
 export const PROJECT_VIEW_TYPE = 'projectnotes-project-view'
 
 const VIEW_MODES: { id: ViewMode; label: string; icon: string; ready: boolean }[] = [
   { id: 'table', label: 'Tabla', icon: 'table', ready: true },
-  { id: 'kanban', label: 'Kanban', icon: 'columns-3', ready: false },
-  { id: 'gantt', label: 'Gantt', icon: 'chart-gantt', ready: false },
+  { id: 'kanban', label: 'Kanban', icon: 'columns-3', ready: true },
+  { id: 'gantt', label: 'Gantt', icon: 'chart-gantt', ready: true },
   { id: 'calendar', label: 'Calendario', icon: 'calendar', ready: false }
 ]
 
@@ -24,6 +27,9 @@ export class ProjectView extends ItemView {
   private mode: ViewMode = 'table'
   private unsubscribe: (() => void) | null = null
   private projectPath: string | undefined
+  private granularity: Granularity = 'week'
+  /** Torn down before every re-render; the Gantt registers window listeners. */
+  private disposeView: (() => void) | null = null
 
   constructor(
     leaf: WorkspaceLeaf,
@@ -59,9 +65,14 @@ export class ProjectView extends ItemView {
   override async onClose(): Promise<void> {
     this.unsubscribe?.()
     this.unsubscribe = null
+    this.disposeView?.()
+    this.disposeView = null
   }
 
   private render(): void {
+    this.disposeView?.()
+    this.disposeView = null
+
     const container = this.contentEl
     container.empty()
     container.addClass('pn-view')
@@ -73,6 +84,26 @@ export class ProjectView extends ItemView {
 
     if (this.mode === 'table') {
       renderTable(body, this.plugin, tasks, this.projectPath)
+      return
+    }
+
+    if (this.mode === 'kanban') {
+      renderKanban(body, this.plugin, tasks, this.projectPath)
+      return
+    }
+
+    if (this.mode === 'gantt') {
+      this.disposeView = renderGantt(
+        body,
+        this.plugin,
+        tasks,
+        this.projectPath,
+        this.granularity,
+        (next) => {
+          this.granularity = next
+          this.render()
+        }
+      )
       return
     }
 

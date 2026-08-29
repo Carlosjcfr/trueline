@@ -89,6 +89,9 @@ export function parseTask(
     milestone: bool(read('milestone')),
     customFields: {},
     ghIssue: str(read('gh_issue')),
+    ghUpdatedAt: str(read('gh_updated_at')),
+    ghHash: str(read('gh_hash')),
+    rank: str(read('rank')),
 
     unknown: {},
     archived: bool(read('archived')) ?? false
@@ -158,6 +161,9 @@ export function serializeTask(
   put('assignees', task.assignees)
   put('milestone', task.milestone ? true : undefined)
   put('gh_issue', task.ghIssue)
+  put('gh_updated_at', task.ghUpdatedAt)
+  put('gh_hash', task.ghHash)
+  put('rank', task.rank)
   put('archived', task.archived ? true : undefined)
 
   return out

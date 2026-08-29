@@ -5,6 +5,8 @@ import type {
   ViewMode
 } from './types'
 import type { TaskIdentification } from './store/TaskStore'
+import type { ConflictPolicy, SyncDirection } from './github/sync'
+import { DEFAULT_SYNC_CONFIG, type GitHubSyncConfig } from './github/mapping'
 
 export interface ProjectNotesSettings {
   identification: TaskIdentification
@@ -20,13 +22,26 @@ export interface ProjectNotesSettings {
   autoSchedule: boolean
   pullForwardOnEarlyFinish: boolean
   autoArchiveDays: number
-  github: {
-    enabled: boolean
-    /** Stored in data.json, which is plain text inside the vault. */
-    token: string
-    repos: string[]
-    pollSeconds: number
-  }
+  github: GitHubSettings
+}
+
+export interface GitHubSettings {
+  enabled: boolean
+  /**
+   * Stored in data.json, which is a plain-text file inside the vault. If the vault is
+   * synced or in git, the token goes with it. Use a fine-grained token scoped to the
+   * repos below, never a classic token with broad scopes.
+   */
+  token: string
+  repos: string[]
+  /** 0 disables the timer; sync then only runs from the command. */
+  pollSeconds: number
+  direction: SyncDirection
+  conflictPolicy: ConflictPolicy
+  importNewIssues: boolean
+  exportNewTasks: boolean
+  syncOnStartup: boolean
+  mapping: GitHubSyncConfig
 }
 
 export const DEFAULT_STATUSES: StatusConfig[] = [
@@ -67,7 +82,18 @@ export const DEFAULT_SETTINGS: ProjectNotesSettings = {
   autoSchedule: true,
   pullForwardOnEarlyFinish: false,
   autoArchiveDays: 0,
-  github: { enabled: false, token: '', repos: [], pollSeconds: 60 }
+  github: {
+    enabled: false,
+    token: '',
+    repos: [],
+    pollSeconds: 60,
+    direction: 'both',
+    conflictPolicy: 'manual',
+    importNewIssues: true,
+    exportNewTasks: false,
+    syncOnStartup: true,
+    mapping: DEFAULT_SYNC_CONFIG
+  }
 }
 
 export function statusConfig(

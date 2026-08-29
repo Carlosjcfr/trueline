@@ -38,6 +38,9 @@ export type SemanticRole =
   | 'assignees'
   | 'milestone'
   | 'gh_issue'
+  | 'gh_updated_at'
+  | 'gh_hash'
+  | 'rank'
 
 export type FieldMapping = Record<SemanticRole, string>
 
@@ -71,7 +74,10 @@ export const DEFAULT_MAPPING: FieldMapping = {
   progress: 'progress',
   assignees: 'assignees',
   milestone: 'milestone',
-  gh_issue: 'gh-issue'
+  gh_issue: 'gh-issue',
+  gh_updated_at: 'gh-updated-at',
+  gh_hash: 'gh-hash',
+  rank: 'pn-rank'
 }
 
 /**
