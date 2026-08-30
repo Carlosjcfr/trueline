@@ -6,6 +6,7 @@ import { ProjectView, PROJECT_VIEW_TYPE } from './views/ProjectView'
 import { openTaskModal } from './modals/TaskModal'
 import { createTask } from './store/create'
 import { GitHubSync, notifyReport, type SyncReport } from './github/sync'
+import { TimerService } from './ui/TimerService'
 import { ProjectNotesSettingTab } from './settings/SettingsTab'
 
 export default class ProjectNotesPlugin extends Plugin {
@@ -13,6 +14,7 @@ export default class ProjectNotesPlugin extends Plugin {
   tasks!: TaskStore
   projects!: ProjectStore
   github: GitHubSync | null = null
+  timer!: TimerService
   private pollHandle: number | null = null
 
   override async onload(): Promise<void> {
@@ -23,13 +25,19 @@ export default class ProjectNotesPlugin extends Plugin {
       tasksFolder: this.settings.tasksFolder
     })
     this.projects = new ProjectStore(this.app, () => this.settings)
+    this.timer = new TimerService(this.app, this.tasks)
 
     // The metadata cache is not populated until layout is ready; scanning before that
     // yields an empty vault and a view that looks broken until the first edit.
     this.app.workspace.onLayoutReady(() => {
       this.projects.rebuild()
       this.tasks.rebuild()
+      // A session left open by a crash or a force-quit is still recorded in the note,
+      // so the timer picks up where it was rather than losing the afternoon.
+      this.timer.adoptRunning()
     })
+
+    this.timer.attachStatusBar(this.addStatusBarItem())
 
     this.registerEvent(
       this.app.metadataCache.on('changed', (file: TFile, data: string, cache: CachedMetadata) => {
@@ -71,6 +79,18 @@ export default class ProjectNotesPlugin extends Plugin {
     this.github = new GitHubSync(this.app, this.tasks, () => this.settings)
 
     this.addCommand({
+      id: 'toggle-timer',
+      name: 'Iniciar o pausar el cronómetro de la nota activa',
+      callback: () => void this.timer.toggleActiveFile()
+    })
+
+    this.addCommand({
+      id: 'stop-timer',
+      name: 'Parar el cronómetro',
+      callback: () => void this.timer.stop()
+    })
+
+    this.addCommand({
       id: 'sync-github',
       name: 'Sincronizar con GitHub',
       callback: () => void this.syncGitHub().then((report) => report && notifyReport(report))
@@ -88,6 +108,7 @@ export default class ProjectNotesPlugin extends Plugin {
 
   override onunload(): void {
     this.stopGitHubPolling()
+    this.timer.dispose()
   }
 
   /**

@@ -19,6 +19,10 @@ import { Chip } from '../ui/primitives/Chip'
 import { ProgressBar } from '../ui/primitives/ProgressBar'
 import { AvatarStack } from '../ui/primitives/AvatarStack'
 import { linkLabel } from '../store/links'
+import { renderTimePanel } from './TimeTrackingPanel'
+import { renderRecurrenceEditor } from './RecurrenceEditor'
+import { instanceState, nextOccurrence } from '../recurrence'
+import { todayDay, toDay } from '../dates'
 
 export function openTaskModal(plugin: ProjectNotesPlugin, task: Task): void {
   new TaskModal(plugin, task).open()
@@ -34,8 +38,12 @@ export function taskType(plugin: ProjectNotesPlugin, task: Task): TaskType {
 }
 
 class TaskModal extends Modal {
-  /** Edits accumulate here and commit on save, so Escape really cancels. */
+  /**
+   * Edits accumulate here and commit on save, so Escape really cancels. The one
+   * exception is the timer, which writes straight through - see TimeTrackingPanel.
+   */
   private draft: Task
+  private disposers: (() => void)[] = []
 
   constructor(
     private readonly plugin: ProjectNotesPlugin,
@@ -50,7 +58,27 @@ class TaskModal extends Modal {
     this.render()
   }
 
+  override onClose(): void {
+    for (const dispose of this.disposers) dispose()
+    this.disposers = []
+  }
+
+  /** Re-reads the task after a write that bypassed the draft (timer, instances). */
+  private resync(): void {
+    const fresh = this.plugin.tasks.get(this.task.path)
+    if (fresh) {
+      this.draft.timeEntries = structuredClone(fresh.timeEntries)
+      this.draft.completeInstances = [...fresh.completeInstances]
+      this.draft.skippedInstances = [...fresh.skippedInstances]
+      this.draft.recurrence = fresh.recurrence
+    }
+    this.render()
+  }
+
   private render(): void {
+    for (const dispose of this.disposers) dispose()
+    this.disposers = []
+
     const { contentEl } = this
     contentEl.empty()
 
@@ -294,6 +322,30 @@ class TaskModal extends Modal {
       'paperclip'
     )
 
+    // -- recurrence --------------------------------------------------------
+    const recurrenceSection = contentEl.createDiv('pn-modal-section')
+    recurrenceSection.createEl('h4', { text: 'Repetición' })
+    renderRecurrenceEditor(recurrenceSection, {
+      task: this.draft,
+      anchor: this.draft.recurrenceAnchor ?? 'scheduled',
+      onChange: (recurrence, anchor) => {
+        this.draft.recurrence = recurrence
+        this.draft.recurrenceAnchor = recurrence ? anchor : undefined
+      }
+    })
+
+    if (this.draft.recurrence) this.renderInstanceRow(recurrenceSection)
+
+    // -- time tracking -----------------------------------------------------
+    const timeSection = contentEl.createDiv('pn-modal-section')
+    timeSection.createEl('h4', { text: 'Tiempo' })
+    this.disposers.push(
+      renderTimePanel(timeSection, this.plugin.tasks.get(this.task.path) ?? this.draft, {
+        plugin: this.plugin,
+        onChange: () => this.resync()
+      })
+    )
+
     // -- actions -----------------------------------------------------------
     new Setting(contentEl)
       .addButton((button) =>
@@ -309,6 +361,52 @@ class TaskModal extends Modal {
           .setCta()
           .onClick(() => void this.commit())
       )
+  }
+
+  /**
+   * Completing today's occurrence, without touching the base status. A recurring task
+   * that gets marked done disappears from every future week, which is exactly what
+   * nobody wants from a weekly review.
+   */
+  private renderInstanceRow(container: HTMLElement): void {
+    const task = this.plugin.tasks.get(this.task.path) ?? this.draft
+    const today = todayDay()
+    const target =
+      toDay(task.scheduled) === today
+        ? task.scheduled!.slice(0, 10)
+        : (nextOccurrence(task, today - 1)?.date ?? new Date().toISOString().slice(0, 10))
+
+    const state = instanceState(task, target)
+    const row = container.createDiv('pn-recur-instance')
+    row.createSpan({ text: `Ocurrencia ${target}: ` })
+    row.createSpan({
+      cls: `pn-recur-state pn-recur-state--${state}`,
+      text: state === 'completed' ? 'completada' : state === 'skipped' ? 'saltada' : 'pendiente'
+    })
+
+    const complete = row.createEl('button', {
+      text: state === 'completed' ? 'Deshacer' : 'Completar'
+    })
+    complete.addEventListener('click', async () => {
+      const { completeInstance, uncompleteInstance } = await import('../recurrence')
+      await this.plugin.tasks.update(
+        task.path,
+        state === 'completed' ? uncompleteInstance(task, target) : completeInstance(task, target)
+      )
+      this.resync()
+    })
+
+    const skip = row.createEl('button', {
+      text: state === 'skipped' ? 'No saltar' : 'Saltar'
+    })
+    skip.addEventListener('click', async () => {
+      const { skipInstance, unskipInstance } = await import('../recurrence')
+      await this.plugin.tasks.update(
+        task.path,
+        state === 'skipped' ? unskipInstance(task, target) : skipInstance(task, target)
+      )
+      this.resync()
+    })
   }
 
   private dateRow(

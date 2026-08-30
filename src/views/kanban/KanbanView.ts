@@ -21,6 +21,7 @@ import { Chip } from '../../ui/primitives/Chip'
 import { ProgressBar } from '../../ui/primitives/ProgressBar'
 import { AvatarStack } from '../../ui/primitives/AvatarStack'
 import { toDay, todayDay } from '../../dates'
+import { formatMinutes, isRunning, trackedMinutes } from '../../store/timer'
 
 interface DragPayload {
   path: string
@@ -127,10 +128,26 @@ function renderCard(
 
   const top = card.createDiv('pn-kanban-card-top')
   if (task.milestone) setIcon(top.createSpan({ cls: 'pn-milestone-icon' }), 'diamond')
+  if (task.recurrence) setIcon(top.createSpan({ cls: 'pn-row-icon' }), 'repeat')
   const title = top.createSpan({ cls: 'pn-kanban-card-title', text: task.title })
   title.addEventListener('click', () => openTaskModal(plugin, task))
 
+  const running = isRunning(task)
+  const timer = top.createSpan({
+    cls: `pn-row-timer pn-kanban-card-timer${running ? ' pn-row-timer--running' : ''}`
+  })
+  setIcon(timer, running ? 'pause' : 'play')
+  timer.addEventListener('click', (event) => {
+    event.stopPropagation()
+    void plugin.timer.toggle(task)
+  })
+
   const meta = card.createDiv('pn-kanban-card-meta')
+
+  const minutes = trackedMinutes(task)
+  if (minutes > 0) {
+    meta.createSpan({ cls: 'pn-kanban-time', text: formatMinutes(minutes) })
+  }
 
   const priority = config.priorities.find((p) => p.id === task.priority)
   if (priority) {

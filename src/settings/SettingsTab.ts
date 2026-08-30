@@ -98,7 +98,12 @@ export class ProjectNotesSettingTab extends PluginSettingTab {
       .setName('Vista por defecto')
       .addDropdown((dropdown) =>
         dropdown
-          .addOptions({ table: 'Tabla', kanban: 'Kanban', gantt: 'Gantt' })
+          .addOptions({
+            table: 'Tabla',
+            kanban: 'Kanban',
+            gantt: 'Gantt',
+            calendar: 'Calendario'
+          })
           .setValue(settings.defaultView)
           .onChange((value) => {
             settings.defaultView = value as typeof settings.defaultView

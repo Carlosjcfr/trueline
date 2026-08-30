@@ -13,6 +13,8 @@ import { renderTable } from './table/TableRenderer'
 import { renderKanban } from './kanban/KanbanView'
 import { renderGantt } from './gantt/GanttView'
 import type { Granularity } from './gantt/timeline'
+import { renderCalendar, type CalendarScope } from './calendar/CalendarView'
+import { todayDay } from '../dates'
 
 export const PROJECT_VIEW_TYPE = 'projectnotes-project-view'
 
@@ -20,7 +22,7 @@ const VIEW_MODES: { id: ViewMode; label: string; icon: string; ready: boolean }[
   { id: 'table', label: 'Tabla', icon: 'table', ready: true },
   { id: 'kanban', label: 'Kanban', icon: 'columns-3', ready: true },
   { id: 'gantt', label: 'Gantt', icon: 'chart-gantt', ready: true },
-  { id: 'calendar', label: 'Calendario', icon: 'calendar', ready: false }
+  { id: 'calendar', label: 'Calendario', icon: 'calendar', ready: true }
 ]
 
 export class ProjectView extends ItemView {
@@ -28,6 +30,8 @@ export class ProjectView extends ItemView {
   private unsubscribe: (() => void) | null = null
   private projectPath: string | undefined
   private granularity: Granularity = 'week'
+  private calendarScope: CalendarScope = 'month'
+  private calendarAnchor = todayDay()
   /** Torn down before every re-render; the Gantt registers window listeners. */
   private disposeView: (() => void) | null = null
 
@@ -101,6 +105,23 @@ export class ProjectView extends ItemView {
         this.granularity,
         (next) => {
           this.granularity = next
+          this.render()
+        }
+      )
+      return
+    }
+
+    if (this.mode === 'calendar') {
+      renderCalendar(
+        body,
+        this.plugin,
+        tasks,
+        this.projectPath,
+        this.calendarScope,
+        this.calendarAnchor,
+        (scope, anchor) => {
+          this.calendarScope = scope
+          this.calendarAnchor = anchor
           this.render()
         }
       )

@@ -764,3 +764,418 @@ body.pn-dragging {
   cursor: grabbing;
   user-select: none;
 }
+
+/* ---- calendar ---------------------------------------------------------- */
+
+.pn-cal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+
+.pn-cal-title {
+  font-weight: 600;
+  text-transform: capitalize;
+  margin-right: auto;
+}
+
+.pn-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--background-modifier-border);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pn-cal-weekday {
+  background: var(--background-secondary);
+  padding: 6px 8px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.pn-cal-cell {
+  background: var(--background-primary);
+  min-height: 96px;
+  padding: 4px 5px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pn-cal-grid--week .pn-cal-cell {
+  min-height: 320px;
+}
+
+.pn-cal-cell--outside {
+  background: var(--background-secondary);
+}
+
+.pn-cal-cell--outside .pn-cal-daynum {
+  opacity: 0.45;
+}
+
+.pn-cal-cell--today .pn-cal-daynum {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-radius: 50%;
+}
+
+.pn-cal-cell--drop {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.pn-cal-daynum {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.pn-cal-entry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-ui-smaller);
+  line-height: 1.3;
+  padding: 2px 4px;
+  border-left: 3px solid var(--text-faint);
+  border-radius: 3px;
+  background: var(--background-secondary);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.pn-cal-entry:hover {
+  background: var(--background-modifier-hover);
+}
+
+.pn-cal-entry-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pn-cal-entry-icon {
+  display: inline-flex;
+  flex: none;
+  opacity: 0.7;
+}
+
+.pn-cal-entry-icon:hover {
+  opacity: 1;
+}
+
+.pn-cal-entry--completed .pn-cal-entry-title {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.pn-cal-entry--skipped {
+  opacity: 0.45;
+}
+
+.pn-cal-entry--skipped .pn-cal-entry-title {
+  font-style: italic;
+}
+
+/* ---- recurrence editor -------------------------------------------------- */
+
+.pn-modal-section {
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 8px;
+  margin-top: 8px;
+}
+
+.pn-modal-section h4 {
+  margin: 0 0 6px;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.pn-recur-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.pn-recur-interval {
+  width: 60px;
+}
+
+.pn-recur-unit,
+.pn-recur-label {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.pn-recur-days {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.pn-recur-day {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: var(--font-ui-smaller);
+}
+
+.pn-recur-day--on {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.pn-recur-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+
+.pn-recur-preview-date {
+  background: var(--background-secondary);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.pn-recur-preview--error {
+  color: var(--text-error);
+}
+
+.pn-recur-instance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-ui-small);
+  padding-top: 6px;
+}
+
+.pn-recur-state--completed {
+  color: var(--color-green);
+}
+
+.pn-recur-state--skipped {
+  color: var(--text-muted);
+}
+
+.pn-recur-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pn-recur-summary {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+/* ---- time tracking ------------------------------------------------------ */
+
+.pn-time-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pn-time-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex: none;
+}
+
+.pn-time-toggle--running {
+  background: var(--color-red);
+  color: #fff;
+}
+
+.pn-time-live {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--font-ui-medium);
+}
+
+.pn-time-live--on {
+  color: var(--color-red);
+  font-weight: 600;
+}
+
+.pn-time-totals {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+}
+
+.pn-time-over {
+  color: var(--text-error);
+}
+
+.pn-time-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.pn-time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-ui-smaller);
+  padding: 2px 0;
+}
+
+.pn-time-row-date,
+.pn-time-row-span {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.pn-time-row-len {
+  flex: none;
+  min-width: 54px;
+}
+
+.pn-time-row-note {
+  flex: 1;
+  min-width: 60px;
+}
+
+.pn-time-row-remove {
+  cursor: pointer;
+  opacity: 0.5;
+  display: inline-flex;
+}
+
+.pn-time-row-remove:hover {
+  opacity: 1;
+  color: var(--text-error);
+}
+
+.pn-time-manual {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pn-time-manual input[type='number'] {
+  width: 70px;
+}
+
+/* ---- status bar timer --------------------------------------------------- */
+
+.pn-timer-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pn-timer-status-icon {
+  display: inline-flex;
+  color: var(--color-red);
+}
+
+.pn-timer-status-label {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.pn-timer-status-title {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.pn-timer-status-title:hover {
+  color: var(--text-normal);
+}
+
+.pn-timer-status-stop {
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.pn-timer-status-stop:hover {
+  color: var(--text-error);
+}
+
+/* ---- inline timer controls --------------------------------------------- */
+
+.pn-row-icon {
+  display: inline-flex;
+  color: var(--text-faint);
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+
+.pn-cell-time {
+  white-space: nowrap;
+}
+
+.pn-row-timer {
+  display: inline-flex;
+  cursor: pointer;
+  opacity: 0;
+  color: var(--text-muted);
+  transition: opacity 80ms ease;
+}
+
+.pn-table-row:hover .pn-row-timer,
+.pn-kanban-card:hover .pn-row-timer {
+  opacity: 0.7;
+}
+
+.pn-row-timer:hover {
+  opacity: 1 !important;
+  color: var(--text-normal);
+}
+
+.pn-row-timer--running {
+  opacity: 1 !important;
+  color: var(--color-red);
+}
+
+.pn-row-time-total {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pn-kanban-card-timer {
+  margin-left: auto;
+  flex: none;
+}
+
+.pn-kanban-time {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}

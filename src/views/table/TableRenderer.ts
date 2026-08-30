@@ -15,6 +15,7 @@ import { openTaskModal } from '../../modals/TaskModal'
 import { Chip } from '../../ui/primitives/Chip'
 import { ProgressBar } from '../../ui/primitives/ProgressBar'
 import { AvatarStack } from '../../ui/primitives/AvatarStack'
+import { formatMinutes, isRunning, trackedMinutes } from '../../store/timer'
 
 interface Node {
   task: Task
@@ -31,7 +32,17 @@ export function renderTable(
   const table = container.createEl('table', { cls: 'pn-table' })
 
   const head = table.createEl('thead').createEl('tr')
-  for (const label of ['', 'Tarea', 'Estado', 'Prioridad', 'Inicio', 'Vence', 'Progreso', 'Asignados']) {
+  for (const label of [
+    '',
+    'Tarea',
+    'Estado',
+    'Prioridad',
+    'Inicio',
+    'Vence',
+    'Tiempo',
+    'Progreso',
+    'Asignados'
+  ]) {
     head.createEl('th', { text: label })
   }
 
@@ -39,7 +50,7 @@ export function renderTable(
   const roots = buildTree(plugin, tasks)
 
   if (roots.length === 0) {
-    const row = body.createEl('tr').createEl('td', { attr: { colspan: '8' } })
+    const row = body.createEl('tr').createEl('td', { attr: { colspan: '9' } })
     row.createDiv('pn-empty-state').setText('No hay tareas todavía.')
     return
   }
@@ -63,6 +74,9 @@ export function renderTable(
     if (node.task.milestone) {
       setIcon(titleCell.createSpan({ cls: 'pn-milestone-icon' }), 'diamond')
     }
+    if (node.task.recurrence) {
+      setIcon(titleCell.createSpan({ cls: 'pn-row-icon' }), 'repeat')
+    }
     const link = titleCell.createSpan({ cls: 'pn-task-link', text: node.task.title })
     link.addEventListener('click', () => openTaskModal(plugin, node.task))
 
@@ -80,6 +94,23 @@ export function renderTable(
     row.createEl('td', { text: dateLabel(node.task.scheduled) })
     const dueCell = row.createEl('td', { text: dateLabel(node.task.due) })
     if (isOverdue(node.task, config.statuses)) dueCell.addClass('pn-cell-overdue')
+
+    // Time cell doubles as the play/pause control: starting a timer is the most
+    // frequent action on a list of tasks, and it should not need a modal.
+    const timeCell = row.createEl('td', { cls: 'pn-cell-time' })
+    const running = isRunning(node.task)
+    const timerToggle = timeCell.createSpan({
+      cls: `pn-row-timer${running ? ' pn-row-timer--running' : ''}`
+    })
+    setIcon(timerToggle, running ? 'pause' : 'play')
+    timerToggle.addEventListener('click', (event) => {
+      event.stopPropagation()
+      void plugin.timer.toggle(node.task)
+    })
+    const minutes = trackedMinutes(node.task)
+    if (minutes > 0) {
+      timeCell.createSpan({ cls: 'pn-row-time-total', text: formatMinutes(minutes) })
+    }
 
     const progressCell = row.createEl('td', { cls: 'pn-cell-progress' })
     new ProgressBar(progressCell).setValue(node.task.progress ?? 0).setSize('sm')

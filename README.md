@@ -84,26 +84,60 @@ Implementado:
 - Modelo de datos conforme al spec (§2), con mapeo de roles, alias de lectura y
   precedencia canónica
 - Serializador que preserva todo campo desconocido (§2.7)
-- `TaskStore`: índice por id estable y por ruta, resolución de wikilinks, escritura
-  vía `processFrontMatter`, sin bucles de eco
-- `ProjectStore`: config por proyecto en el frontmatter, con herencia por el árbol
-- **Vista de tabla** con jerarquía derivada de `projects`
-- **Kanban** con arrastrar y soltar y orden fraccional estable
-- **Gantt** con zoom día→año, barras arrastrables y redimensionables, hitos, línea de
-  hoy y flechas de dependencia que respetan `reltype` y `gap`
+- `TaskStore`: índice por id estable y por ruta, escritura vía `processFrontMatter`,
+  sin bucles de eco
+- `ProjectStore`: config por proyecto en el frontmatter, heredable por el árbol
+- **Tabla**, **Kanban** (drag & drop con orden fraccional), **Gantt** (zoom día→año,
+  barras arrastrables, hitos, flechas de dependencia) y **Calendario** (mes y semana)
+- **Recurrencia RRULE** (§4): expansión de ocurrencias, estado por instancia, anclaje
+  `scheduled` o `completion`, editor visual con vista previa
+- **Cronómetro** con play/pause, sesiones editables, entrada manual y widget en la
+  barra de estado
 - **Reprogramación automática** de dependientes, con detección de ciclos
-- **Sincronización bidireccional con GitHub**: sondeo condicional con ETag, tabla de
-  decisión explícita, detección de conflictos y prevención de bucles
-- Modal de tarea con la rejilla de propiedades de PM y campos personalizados
+- **Sincronización bidireccional con GitHub** con ETag, tabla de decisión y anti-bucle
 - Pestaña de ajustes completa
-- 49 tests
+- 90 tests
 
 Pendiente:
 
-1. Recurrencia con `rrule` y estado por instancia
-2. Vista de calendario
-3. Adaptador para la suite de conformidad de `tasknotes-spec`
+1. Adaptador para la suite de conformidad de `tasknotes-spec`
+2. Perfil `materialized-occurrences` (§4.18)
+3. Recordatorios: se leen y se preservan, pero aún no se disparan
 4. GitHub Projects v2 (requiere GraphQL)
+
+## Recurrencia
+
+La regla se guarda en la forma combinada de una sola línea que exige el spec:
+
+```yaml
+recurrence: DTSTART:20260907;FREQ=WEEKLY;BYDAY=MO
+recurrence_anchor: scheduled
+complete_instances: ["2026-09-14"]
+skipped_instances: ["2026-09-21"]
+```
+
+Completar una ocurrencia **no toca el `status` de la tarea** (§4.12): escribe la fecha
+en `complete_instances`. Una revisión semanal marcada como "hecha" desaparecería de
+todas las semanas futuras, que es justo lo que nadie quiere.
+
+Con anclaje `completion`, completar reescribe el `DTSTART` a la fecha de finalización,
+así que "cada 2 semanas desde que lo termine" funciona de verdad.
+
+## Cronómetro
+
+Una sesión en curso es una entrada de `timeEntries` con `startTime` y sin `endTime`.
+No hay ningún otro sitio donde se guarde "el cronómetro está en marcha": si Obsidian
+se cierra a lo bruto, la nota ya dice que había una sesión abierta y al arrancar se
+recupera en lugar de perder la tarde.
+
+Solo puede correr un cronómetro en todo el vault. Arrancar una tarea para la que está
+corriendo otra la para primero — si no, los informes suman más horas de las que tiene
+el día y nadie se entera hasta facturar.
+
+Play y pausa están en la fila de la tabla, en la tarjeta del Kanban, en el modal y en
+la barra de estado. Los botones del modal escriben directamente al vault, no al
+borrador que se guarda al pulsar Guardar: cancelar el modal no debe borrar tiempo que
+de verdad trabajaste.
 
 ## Sincronización con GitHub
 
