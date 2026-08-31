@@ -7,17 +7,46 @@ Gestión de proyectos en Obsidian sobre el modelo de datos de
 Una nota por tarea. El frontmatter sigue los roles semánticos del spec, así que el
 mismo vault lo pueden leer TaskNotes, su CLI y este plugin sin migrar nada.
 
-## Instalación (desarrollo)
+## Instalación
 
-```bash
-npm install
-npm run build          # genera main.js
-npm run dev            # watch
-npm test               # vitest
-```
+### Solo usarlo
 
 Copia `main.js`, `manifest.json` y `styles.css` a
-`<vault>/.obsidian/plugins/projectnotes/` y activa el plugin.
+`<vault>/.obsidian/plugins/projectnotes/` y activa el plugin en
+Ajustes → Plugins de la comunidad.
+
+### Desarrollarlo (recomendado)
+
+Pon **esta misma carpeta** en `<vault>/.obsidian/plugins/projectnotes/`. El repositorio
+y el plugin instalado son la misma cosa: `npm run dev` compila `main.js` justo donde
+Obsidian lo busca, así que editas, guardas y recargas.
+
+```bash
+cd <vault>/.obsidian/plugins/projectnotes
+npm install
+npm run dev      # watch: recompila main.js al guardar
+npm test         # vitest
+npm run build    # compilación de producción
+```
+
+Para no tener que recargar Obsidian a mano en cada cambio, instala el plugin
+[Hot-Reload](https://github.com/pjeby/hot-reload) y crea un archivo vacío llamado
+`.hotreload` en esta carpeta.
+
+`main.js` está en `.gitignore` porque es un artefacto de compilación: se publica en las
+releases, no se versiona. Si clonas el repo en un vault limpio, ejecuta `npm install &&
+npm run build` antes de activar el plugin.
+
+### Publicarlo
+
+```bash
+gh repo create projectnotes --private --source=. --push
+gh release create 0.1.0 main.js manifest.json styles.css --title "0.1.0"
+```
+
+Con la release publicada, cualquiera puede instalarlo con
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) → *Add Beta Plugin* → la URL del
+repositorio.
 
 ## Cómo identifica una tarea
 
