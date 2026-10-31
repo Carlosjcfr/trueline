@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "devDependencies": {
     "@types/node": "^22.10.0",
     "builtin-modules": "^4.0.0",

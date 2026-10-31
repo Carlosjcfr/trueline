@@ -202,7 +202,7 @@ del vault. Si sincronizas el vault o lo tienes en git, el token viaja con él. U
 token de alcance reducido (fine-grained) limitado a los repos que necesites, con
 permiso de Issues de lectura y escritura, nunca un token clásico con permisos amplios.
 
-## Licencias
+## Licencia
 
-Ver `NOTICE.md`. Código adaptado de Project Manager (MIT) y modelo de datos según la
-especificación de TaskNotes.
+**GPL-3.0-or-later.** Ver `LICENSE` y, para el código de terceros incluido (Project
+Manager, MIT; rrule, BSD-3-Clause), `NOTICE.md`.

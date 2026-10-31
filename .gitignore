@@ -1,3 +1,8 @@
 node_modules/
 main.js
 main.js.map
+
+# Ajustes de Obsidian: contiene el token de GitHub
+data.json
+.env
+*.local
