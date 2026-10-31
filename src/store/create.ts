@@ -1,6 +1,6 @@
 import type { App, TFile } from 'obsidian'
 import { normalizePath } from 'obsidian'
-import type { ProjectNotesSettings } from '../settings'
+import type { TruelineSettings } from '../settings'
 import type { Task } from '../types'
 import { serializeTask } from './serialize'
 
@@ -21,7 +21,7 @@ export interface NewTaskInput {
  */
 export async function createTask(
   app: App,
-  settings: ProjectNotesSettings,
+  settings: TruelineSettings,
   input: NewTaskInput
 ): Promise<TFile> {
   const now = new Date().toISOString()

@@ -1,5 +1,5 @@
 import { Notice, PluginSettingTab, Setting, type App } from 'obsidian'
-import type ProjectNotesPlugin from '../main'
+import type TruelinePlugin from '../main'
 import { describeReport } from '../github/sync'
 
 /**
@@ -9,10 +9,10 @@ import { describeReport } from '../github/sync'
  * offering a single "sync" toggle. A bridge that writes to someone else's repository
  * should never leave the user guessing which way the data moves.
  */
-export class ProjectNotesSettingTab extends PluginSettingTab {
+export class TruelineSettingTab extends PluginSettingTab {
   constructor(
     app: App,
-    private readonly plugin: ProjectNotesPlugin
+    private readonly plugin: TruelinePlugin
   ) {
     super(app, plugin)
   }

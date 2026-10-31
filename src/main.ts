@@ -1,5 +1,5 @@
 import { Plugin, TFile, type CachedMetadata, type WorkspaceLeaf } from 'obsidian'
-import { DEFAULT_SETTINGS, type ProjectNotesSettings } from './settings'
+import { DEFAULT_SETTINGS, type TruelineSettings } from './settings'
 import { TaskStore } from './store/TaskStore'
 import { ProjectStore } from './store/ProjectStore'
 import { ProjectView, PROJECT_VIEW_TYPE } from './views/ProjectView'
@@ -7,10 +7,10 @@ import { openTaskModal } from './modals/TaskModal'
 import { createTask } from './store/create'
 import { GitHubSync, notifyReport, type SyncReport } from './github/sync'
 import { TimerService } from './ui/TimerService'
-import { ProjectNotesSettingTab } from './settings/SettingsTab'
+import { TruelineSettingTab } from './settings/SettingsTab'
 
-export default class ProjectNotesPlugin extends Plugin {
-  override settings: ProjectNotesSettings = DEFAULT_SETTINGS
+export default class TruelinePlugin extends Plugin {
+  override settings: TruelineSettings = DEFAULT_SETTINGS
   tasks!: TaskStore
   projects!: ProjectStore
   github: GitHubSync | null = null
@@ -60,7 +60,7 @@ export default class ProjectNotesPlugin extends Plugin {
 
     this.registerView(PROJECT_VIEW_TYPE, (leaf: WorkspaceLeaf) => new ProjectView(leaf, this))
 
-    this.addRibbonIcon('kanban-square', 'ProjectNotes', () => {
+    this.addRibbonIcon('kanban-square', 'Trueline', () => {
       void this.activateProjectView()
     })
 
@@ -96,7 +96,7 @@ export default class ProjectNotesPlugin extends Plugin {
       callback: () => void this.syncGitHub().then((report) => report && notifyReport(report))
     })
 
-    this.addSettingTab(new ProjectNotesSettingTab(this.app, this))
+    this.addSettingTab(new TruelineSettingTab(this.app, this))
 
     this.app.workspace.onLayoutReady(() => {
       this.restartGitHubPolling()
@@ -160,7 +160,7 @@ export default class ProjectNotesPlugin extends Plugin {
   }
 
   /**
-   * Reuses the open ProjectNotes tab rather than stacking a new one on every call —
+   * Reuses the open Trueline tab rather than stacking a new one on every call —
    * the behaviour Obsidian only gives you if you ask for it explicitly.
    */
   async activateProjectView(): Promise<void> {

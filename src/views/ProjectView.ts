@@ -7,7 +7,7 @@
  */
 
 import { ItemView, setIcon, type WorkspaceLeaf } from 'obsidian'
-import type ProjectNotesPlugin from '../main'
+import type TruelinePlugin from '../main'
 import type { Task, ViewMode } from '../types'
 import { renderTable } from './table/TableRenderer'
 import { renderKanban } from './kanban/KanbanView'
@@ -16,7 +16,7 @@ import type { Granularity } from './gantt/timeline'
 import { renderCalendar, type CalendarScope } from './calendar/CalendarView'
 import { todayDay } from '../dates'
 
-export const PROJECT_VIEW_TYPE = 'projectnotes-project-view'
+export const PROJECT_VIEW_TYPE = 'trueline-project-view'
 
 const VIEW_MODES: { id: ViewMode; label: string; icon: string; ready: boolean }[] = [
   { id: 'table', label: 'Tabla', icon: 'table', ready: true },
@@ -37,7 +37,7 @@ export class ProjectView extends ItemView {
 
   constructor(
     leaf: WorkspaceLeaf,
-    private readonly plugin: ProjectNotesPlugin
+    private readonly plugin: TruelinePlugin
   ) {
     super(leaf)
   }
@@ -50,7 +50,7 @@ export class ProjectView extends ItemView {
     const project = this.projectPath
       ? this.plugin.projects.get(this.projectPath)
       : undefined
-    return project ? project.title : 'ProjectNotes'
+    return project ? project.title : 'Trueline'
   }
 
   override getIcon(): string {
@@ -79,11 +79,11 @@ export class ProjectView extends ItemView {
 
     const container = this.contentEl
     container.empty()
-    container.addClass('pn-view')
+    container.addClass('tl-view')
 
     this.renderHeader(container)
 
-    const body = container.createDiv('pn-view-body')
+    const body = container.createDiv('tl-view-body')
     const tasks = this.visibleTasks()
 
     if (this.mode === 'table') {
@@ -128,17 +128,17 @@ export class ProjectView extends ItemView {
       return
     }
 
-    const pending = body.createDiv('pn-empty-state')
-    setIcon(pending.createDiv('pn-empty-icon'), 'hammer')
+    const pending = body.createDiv('tl-empty-state')
+    setIcon(pending.createDiv('tl-empty-icon'), 'hammer')
     pending.createEl('p', {
       text: `La vista ${labelFor(this.mode)} todavía no está implementada.`
     })
   }
 
   private renderHeader(container: HTMLElement): void {
-    const header = container.createDiv('pn-view-header')
+    const header = container.createDiv('tl-view-header')
 
-    const picker = header.createEl('select', { cls: 'dropdown pn-project-picker' })
+    const picker = header.createEl('select', { cls: 'dropdown tl-project-picker' })
     picker.createEl('option', { value: '', text: 'Todas las tareas' })
     for (const project of this.plugin.projects.all()) {
       picker.createEl('option', { value: project.path, text: project.title })
@@ -149,15 +149,15 @@ export class ProjectView extends ItemView {
       this.render()
     })
 
-    const switcher = header.createDiv('pn-view-switcher')
+    const switcher = header.createDiv('tl-view-switcher')
     for (const mode of VIEW_MODES) {
       const button = switcher.createEl('button', {
-        cls: `pn-view-btn${this.mode === mode.id ? ' pn-view-btn--active' : ''}`,
+        cls: `tl-view-btn${this.mode === mode.id ? ' tl-view-btn--active' : ''}`,
         attr: { 'aria-label': mode.label }
       })
       setIcon(button.createSpan(), mode.icon)
       button.createSpan({ text: mode.label })
-      if (!mode.ready) button.addClass('pn-view-btn--pending')
+      if (!mode.ready) button.addClass('tl-view-btn--pending')
       button.addEventListener('click', () => {
         this.mode = mode.id
         this.render()

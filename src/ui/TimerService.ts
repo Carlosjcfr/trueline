@@ -42,17 +42,17 @@ export class TimerService {
 
   attachStatusBar(el: HTMLElement): void {
     this.statusEl = el
-    el.addClass('pn-timer-status')
+    el.addClass('tl-timer-status')
 
-    const icon = el.createSpan({ cls: 'pn-timer-status-icon' })
+    const icon = el.createSpan({ cls: 'tl-timer-status-icon' })
     setIcon(icon, 'timer')
 
-    this.labelEl = el.createSpan({ cls: 'pn-timer-status-label' })
+    this.labelEl = el.createSpan({ cls: 'tl-timer-status-label' })
 
-    const openTask = el.createSpan({ cls: 'pn-timer-status-title' })
+    const openTask = el.createSpan({ cls: 'tl-timer-status-title' })
     openTask.addEventListener('click', () => this.openActive())
 
-    const stop = el.createSpan({ cls: 'pn-timer-status-stop' })
+    const stop = el.createSpan({ cls: 'tl-timer-status-stop' })
     setIcon(stop, 'pause')
     setTooltip(stop, 'Pausar')
     stop.addEventListener('click', (event) => {
@@ -134,7 +134,7 @@ export class TimerService {
     }
 
     this.statusEl.show()
-    const title = this.statusEl.querySelector('.pn-timer-status-title')
+    const title = this.statusEl.querySelector('.tl-timer-status-title')
     if (title instanceof HTMLElement) title.setText(task.title)
     this.tick()
     this.startTicking()

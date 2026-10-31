@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { setTooltip } from 'obsidian'
 import { displayName, makeActivatable, stringToColor } from '../dom'
@@ -19,7 +19,7 @@ export class Avatar {
   el: HTMLSpanElement
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createSpan({ cls: 'pn-avatar' })
+    this.el = parentEl.createSpan({ cls: 'tl-avatar' })
   }
 
   setName(name: string): this {
@@ -31,17 +31,17 @@ export class Avatar {
   }
 
   setSize(size: 'md' | 'sm'): this {
-    this.el.toggleClass('pn-avatar--sm', size === 'sm')
+    this.el.toggleClass('tl-avatar--sm', size === 'sm')
     return this
   }
 
   setUnresolved(unresolved: boolean): this {
-    this.el.toggleClass('pn-avatar--unresolved', unresolved)
+    this.el.toggleClass('tl-avatar--unresolved', unresolved)
     return this
   }
 
   onClick(handler: () => void): this {
-    this.el.addClass('pn-avatar--link')
+    this.el.addClass('tl-avatar--link')
     makeActivatable(this.el, handler)
     return this
   }

@@ -8,7 +8,7 @@
  */
 
 import { setIcon } from 'obsidian'
-import type ProjectNotesPlugin from '../../main'
+import type TruelinePlugin from '../../main'
 import type { Task } from '../../types'
 import { nextStatus } from '../../settings'
 import { openTaskModal } from '../../modals/TaskModal'
@@ -24,12 +24,12 @@ interface Node {
 
 export function renderTable(
   container: HTMLElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   tasks: Task[],
   projectPath: string | undefined
 ): void {
   const config = plugin.projects.resolve(projectPath)
-  const table = container.createEl('table', { cls: 'pn-table' })
+  const table = container.createEl('table', { cls: 'tl-table' })
 
   const head = table.createEl('thead').createEl('tr')
   for (const label of [
@@ -51,16 +51,16 @@ export function renderTable(
 
   if (roots.length === 0) {
     const row = body.createEl('tr').createEl('td', { attr: { colspan: '9' } })
-    row.createDiv('pn-empty-state').setText('No hay tareas todavía.')
+    row.createDiv('tl-empty-state').setText('No hay tareas todavía.')
     return
   }
 
   const renderNode = (node: Node, depth: number): void => {
-    const row = body.createEl('tr', { cls: 'pn-table-row' })
+    const row = body.createEl('tr', { cls: 'tl-table-row' })
 
-    const statusCell = row.createEl('td', { cls: 'pn-cell-status-icon' })
+    const statusCell = row.createEl('td', { cls: 'tl-cell-status-icon' })
     const status = config.statuses.find((s) => s.id === node.task.status)
-    const toggle = statusCell.createSpan({ cls: 'pn-status-toggle' })
+    const toggle = statusCell.createSpan({ cls: 'tl-status-toggle' })
     setIcon(toggle, status?.icon ?? 'circle')
     toggle.style.color = status?.color ?? 'var(--text-muted)'
     toggle.addEventListener('click', () => {
@@ -69,15 +69,15 @@ export function renderTable(
       })
     })
 
-    const titleCell = row.createEl('td', { cls: 'pn-cell-title' })
+    const titleCell = row.createEl('td', { cls: 'tl-cell-title' })
     titleCell.style.paddingLeft = `${depth * 18 + 8}px`
     if (node.task.milestone) {
-      setIcon(titleCell.createSpan({ cls: 'pn-milestone-icon' }), 'diamond')
+      setIcon(titleCell.createSpan({ cls: 'tl-milestone-icon' }), 'diamond')
     }
     if (node.task.recurrence) {
-      setIcon(titleCell.createSpan({ cls: 'pn-row-icon' }), 'repeat')
+      setIcon(titleCell.createSpan({ cls: 'tl-row-icon' }), 'repeat')
     }
-    const link = titleCell.createSpan({ cls: 'pn-task-link', text: node.task.title })
+    const link = titleCell.createSpan({ cls: 'tl-task-link', text: node.task.title })
     link.addEventListener('click', () => openTaskModal(plugin, node.task))
 
     const statusText = row.createEl('td')
@@ -93,14 +93,14 @@ export function renderTable(
 
     row.createEl('td', { text: dateLabel(node.task.scheduled) })
     const dueCell = row.createEl('td', { text: dateLabel(node.task.due) })
-    if (isOverdue(node.task, config.statuses)) dueCell.addClass('pn-cell-overdue')
+    if (isOverdue(node.task, config.statuses)) dueCell.addClass('tl-cell-overdue')
 
     // Time cell doubles as the play/pause control: starting a timer is the most
     // frequent action on a list of tasks, and it should not need a modal.
-    const timeCell = row.createEl('td', { cls: 'pn-cell-time' })
+    const timeCell = row.createEl('td', { cls: 'tl-cell-time' })
     const running = isRunning(node.task)
     const timerToggle = timeCell.createSpan({
-      cls: `pn-row-timer${running ? ' pn-row-timer--running' : ''}`
+      cls: `tl-row-timer${running ? ' tl-row-timer--running' : ''}`
     })
     setIcon(timerToggle, running ? 'pause' : 'play')
     timerToggle.addEventListener('click', (event) => {
@@ -109,10 +109,10 @@ export function renderTable(
     })
     const minutes = trackedMinutes(node.task)
     if (minutes > 0) {
-      timeCell.createSpan({ cls: 'pn-row-time-total', text: formatMinutes(minutes) })
+      timeCell.createSpan({ cls: 'tl-row-time-total', text: formatMinutes(minutes) })
     }
 
-    const progressCell = row.createEl('td', { cls: 'pn-cell-progress' })
+    const progressCell = row.createEl('td', { cls: 'tl-cell-progress' })
     new ProgressBar(progressCell).setValue(node.task.progress ?? 0).setSize('sm')
 
     const assigneeCell = row.createEl('td')
@@ -131,7 +131,7 @@ export function renderTable(
  * promoted to a root rather than hidden — dropping it would make the count wrong and
  * the missing row impossible to explain.
  */
-function buildTree(plugin: ProjectNotesPlugin, tasks: Task[]): Node[] {
+function buildTree(plugin: TruelinePlugin, tasks: Task[]): Node[] {
   const nodes = new Map<string, Node>()
   for (const task of tasks) nodes.set(task.path, { task, children: [] })
 

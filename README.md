@@ -1,4 +1,4 @@
-# ProjectNotes
+# Trueline
 
 Gestión de proyectos en Obsidian sobre el modelo de datos de
 [TaskNotes](https://github.com/callumalpass/tasknotes-spec), con la interfaz de
@@ -12,17 +12,17 @@ mismo vault lo pueden leer TaskNotes, su CLI y este plugin sin migrar nada.
 ### Solo usarlo
 
 Copia `main.js`, `manifest.json` y `styles.css` a
-`<vault>/.obsidian/plugins/projectnotes/` y activa el plugin en
+`<vault>/.obsidian/plugins/trueline/` y activa el plugin en
 Ajustes → Plugins de la comunidad.
 
 ### Desarrollarlo (recomendado)
 
-Pon **esta misma carpeta** en `<vault>/.obsidian/plugins/projectnotes/`. El repositorio
+Pon **esta misma carpeta** en `<vault>/.obsidian/plugins/trueline/`. El repositorio
 y el plugin instalado son la misma cosa: `npm run dev` compila `main.js` justo donde
 Obsidian lo busca, así que editas, guardas y recargas.
 
 ```bash
-cd <vault>/.obsidian/plugins/projectnotes
+cd <vault>/.obsidian/plugins/trueline
 npm install
 npm run dev      # watch: recompila main.js al guardar
 npm test         # vitest
@@ -40,7 +40,7 @@ npm run build` antes de activar el plugin.
 ### Publicarlo
 
 ```bash
-gh repo create projectnotes --private --source=. --push
+gh repo create trueline --private --source=. --push
 gh release create 0.1.0 main.js manifest.json styles.css --title "0.1.0"
 ```
 
@@ -48,9 +48,17 @@ Con la release publicada, cualquiera puede instalarlo con
 [BRAT](https://github.com/TfTHacker/obsidian42-brat) → *Add Beta Plugin* → la URL del
 repositorio.
 
+## Migración desde ProjectNotes
+
+El plugin se llamó ProjectNotes en sus primeras versiones. Las notas creadas entonces
+siguen funcionando: `pn-task`, `pn-project` y `pn-rank` se leen como alias, y `pn-rank`
+se reescribe como `tl-rank` la próxima vez que se edita la tarea. Los ajustes no se
+trasladan solos porque viven en la carpeta del plugin: si tenías algo configurado, copia
+`.obsidian/plugins/projectnotes/data.json` a `.obsidian/plugins/trueline/`.
+
 ## Cómo identifica una tarea
 
-Por defecto, la propiedad `pn-task: true`. Configurable a tag o a otra
+Por defecto, la propiedad `tl-task: true`. Configurable a tag o a otra
 propiedad/valor, de modo que puedes apuntarlo a `pm-task: true` y ver las tareas que
 ya tengas de Project Manager sin convertir nada.
 
@@ -58,7 +66,7 @@ ya tengas de Project Manager sin convertir nada.
 
 ```yaml
 ---
-pn-task: true
+tl-task: true
 id: revisar-dietas-a91f     # identidad estable; no cambia al renombrar ni mover
 title: Revisar dietas Q3
 status: in-progress
@@ -86,12 +94,12 @@ dateModified: "2026-08-29T18:00:00Z"
 El cuerpo es la hoja de la tarea. Markdown normal, embeds incluidos.
 ```
 
-Un proyecto es una nota con `pn-project: true`. Su configuración vive en su propio
+Un proyecto es una nota con `tl-project: true`. Su configuración vive en su propio
 frontmatter y se hereda hacia los sub-proyectos:
 
 ```yaml
 ---
-pn-project: true
+tl-project: true
 title: Dietas
 color: "#7c3aed"
 icon: target

@@ -77,7 +77,7 @@ export const DEFAULT_MAPPING: FieldMapping = {
   gh_issue: 'gh-issue',
   gh_updated_at: 'gh-updated-at',
   gh_hash: 'gh-hash',
-  rank: 'pn-rank'
+  rank: 'tl-rank'
 }
 
 /**
@@ -96,7 +96,9 @@ export const READ_ALIASES: Partial<Record<SemanticRole, string[]>> = {
   skipped_instances: ['skippedInstances'],
   // Project Manager wrote Start into `start`; same semantic role as `scheduled`.
   scheduled: ['start'],
-  attachments: []
+  attachments: [],
+  // Written by builds from before the rename to Trueline.
+  rank: ['pn-rank']
 }
 
 export interface MappingIssue {

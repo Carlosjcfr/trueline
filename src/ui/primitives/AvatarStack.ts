@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { Avatar } from './Avatar'
 
@@ -19,7 +19,7 @@ export class AvatarStack {
   private size: 'md' | 'sm' = 'md'
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pn-avatar-stack')
+    this.el = parentEl.createDiv('tl-avatar-stack')
   }
 
   setNames(names: string[]): this {
@@ -54,9 +54,9 @@ export class AvatarStack {
     }
     const overflow = this.people.length - visible.length
     if (overflow > 0) {
-      const more = this.el.createSpan({ cls: 'pn-avatar pn-avatar--more' })
+      const more = this.el.createSpan({ cls: 'tl-avatar tl-avatar--more' })
       more.setText(`+${overflow}`)
-      if (this.size === 'sm') more.addClass('pn-avatar--sm')
+      if (this.size === 'sm') more.addClass('tl-avatar--sm')
     }
   }
 }

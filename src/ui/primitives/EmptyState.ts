@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { ButtonComponent } from 'obsidian'
 
@@ -13,11 +13,11 @@ export class EmptyState {
   private actionEl?: HTMLElement
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pn-empty-state')
+    this.el = parentEl.createDiv('tl-empty-state')
   }
 
   setIcon(text: string): this {
-    this.iconEl ??= this.el.createDiv('pn-empty-icon')
+    this.iconEl ??= this.el.createDiv('tl-empty-icon')
     this.iconEl.setText(text)
     return this
   }
@@ -35,7 +35,7 @@ export class EmptyState {
   }
 
   setAction(label: string, onClick: () => void): this {
-    if (!this.actionEl) this.actionEl = this.el.createDiv('pn-empty-action')
+    if (!this.actionEl) this.actionEl = this.el.createDiv('tl-empty-action')
     this.actionEl.empty()
     new ButtonComponent(this.actionEl).setButtonText(label).setCta().onClick(onClick)
     return this

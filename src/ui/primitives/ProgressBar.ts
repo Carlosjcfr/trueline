@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 export class ProgressBar {
   el: HTMLDivElement
@@ -10,9 +10,9 @@ export class ProgressBar {
   private value = 0
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createDiv('pn-progress')
-    const track = this.el.createDiv('pn-progress-track')
-    this.fill = track.createDiv('pn-progress-fill')
+    this.el = parentEl.createDiv('tl-progress')
+    const track = this.el.createDiv('tl-progress-track')
+    this.fill = track.createDiv('tl-progress-fill')
   }
 
   setValue(percent: number): this {
@@ -23,18 +23,18 @@ export class ProgressBar {
   }
 
   setColor(color: string): this {
-    this.el.style.setProperty('--pn-progress-color', color)
+    this.el.style.setProperty('--tl-progress-color', color)
     return this
   }
 
   setSize(size: 'sm' | 'md'): this {
-    this.el.toggleClass('pn-progress--sm', size === 'sm')
+    this.el.toggleClass('tl-progress--sm', size === 'sm')
     return this
   }
 
   setShowLabel(show: boolean): this {
     if (show && !this.labelEl) {
-      this.labelEl = this.el.createSpan({ cls: 'pn-progress-label', text: `${Math.round(this.value)}%` })
+      this.labelEl = this.el.createSpan({ cls: 'tl-progress-label', text: `${Math.round(this.value)}%` })
     } else if (!show && this.labelEl) {
       this.labelEl.remove()
       this.labelEl = null

@@ -13,7 +13,7 @@
  */
 
 import { setIcon } from 'obsidian'
-import type ProjectNotesPlugin from '../../main'
+import type TruelinePlugin from '../../main'
 import type { ResolvedProjectConfig, Task } from '../../types'
 import { openTaskModal } from '../../modals/TaskModal'
 import { byRank, rankBetween } from '../../store/rank'
@@ -32,12 +32,12 @@ let dragging: DragPayload | null = null
 
 export function renderKanban(
   container: HTMLElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   tasks: Task[],
   projectPath: string | undefined
 ): void {
   const config = plugin.projects.resolve(projectPath)
-  const board = container.createDiv('pn-kanban')
+  const board = container.createDiv('tl-kanban')
 
   const byStatus = new Map<string, Task[]>()
   for (const status of config.statuses) byStatus.set(status.id, [])
@@ -49,23 +49,23 @@ export function renderKanban(
   }
 
   for (const status of config.statuses) {
-    const column = board.createDiv('pn-kanban-col')
+    const column = board.createDiv('tl-kanban-col')
     const cards = (byStatus.get(status.id) ?? []).slice().sort(byRank)
 
-    const header = column.createDiv('pn-kanban-col-header')
-    const dot = header.createSpan({ cls: 'pn-kanban-col-dot' })
+    const header = column.createDiv('tl-kanban-col-header')
+    const dot = header.createSpan({ cls: 'tl-kanban-col-dot' })
     dot.style.background = status.color
-    header.createSpan({ cls: 'pn-kanban-col-title', text: status.label })
-    header.createSpan({ cls: 'pn-kanban-col-count', text: String(cards.length) })
+    header.createSpan({ cls: 'tl-kanban-col-title', text: status.label })
+    header.createSpan({ cls: 'tl-kanban-col-count', text: String(cards.length) })
 
-    const list = column.createDiv('pn-kanban-list')
+    const list = column.createDiv('tl-kanban-list')
     list.dataset.status = status.id
 
     for (const task of cards) renderCard(list, plugin, task, config)
 
     // The drop indicator is a single reused element: creating one per dragover is what
     // makes naive Kanban implementations flicker.
-    const indicator = list.createDiv('pn-kanban-drop-indicator')
+    const indicator = list.createDiv('tl-kanban-drop-indicator')
     indicator.hide()
 
     list.addEventListener('dragover', (event) => {
@@ -88,7 +88,7 @@ export function renderKanban(
       const payload = dragging
       dragging = null
 
-      const ordered = [...list.querySelectorAll<HTMLElement>('.pn-kanban-card')]
+      const ordered = [...list.querySelectorAll<HTMLElement>('.tl-kanban-card')]
         .map((el) => el.dataset.path)
         .filter((path): path is string => Boolean(path) && path !== payload.path)
 
@@ -108,33 +108,33 @@ export function renderKanban(
 
 function renderCard(
   list: HTMLElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   task: Task,
   config: ResolvedProjectConfig
 ): void {
-  const card = list.createDiv('pn-kanban-card')
+  const card = list.createDiv('tl-kanban-card')
   card.dataset.path = task.path
   card.draggable = true
 
   card.addEventListener('dragstart', (event) => {
     dragging = { path: task.path, fromStatus: task.status }
-    card.addClass('pn-kanban-card--dragging')
+    card.addClass('tl-kanban-card--dragging')
     event.dataTransfer?.setData('text/plain', task.path)
   })
   card.addEventListener('dragend', () => {
-    card.removeClass('pn-kanban-card--dragging')
+    card.removeClass('tl-kanban-card--dragging')
     dragging = null
   })
 
-  const top = card.createDiv('pn-kanban-card-top')
-  if (task.milestone) setIcon(top.createSpan({ cls: 'pn-milestone-icon' }), 'diamond')
-  if (task.recurrence) setIcon(top.createSpan({ cls: 'pn-row-icon' }), 'repeat')
-  const title = top.createSpan({ cls: 'pn-kanban-card-title', text: task.title })
+  const top = card.createDiv('tl-kanban-card-top')
+  if (task.milestone) setIcon(top.createSpan({ cls: 'tl-milestone-icon' }), 'diamond')
+  if (task.recurrence) setIcon(top.createSpan({ cls: 'tl-row-icon' }), 'repeat')
+  const title = top.createSpan({ cls: 'tl-kanban-card-title', text: task.title })
   title.addEventListener('click', () => openTaskModal(plugin, task))
 
   const running = isRunning(task)
   const timer = top.createSpan({
-    cls: `pn-row-timer pn-kanban-card-timer${running ? ' pn-row-timer--running' : ''}`
+    cls: `tl-row-timer tl-kanban-card-timer${running ? ' tl-row-timer--running' : ''}`
   })
   setIcon(timer, running ? 'pause' : 'play')
   timer.addEventListener('click', (event) => {
@@ -142,11 +142,11 @@ function renderCard(
     void plugin.timer.toggle(task)
   })
 
-  const meta = card.createDiv('pn-kanban-card-meta')
+  const meta = card.createDiv('tl-kanban-card-meta')
 
   const minutes = trackedMinutes(task)
   if (minutes > 0) {
-    meta.createSpan({ cls: 'pn-kanban-time', text: formatMinutes(minutes) })
+    meta.createSpan({ cls: 'tl-kanban-time', text: formatMinutes(minutes) })
   }
 
   const priority = config.priorities.find((p) => p.id === task.priority)
@@ -154,29 +154,29 @@ function renderCard(
     new Chip(meta).setLabel(priority.label).setVariant('outline').setColor(priority.color)
   }
   for (const tag of task.tags.slice(0, 3)) {
-    new Chip(meta).setLabel(tag).setVariant('plain').el.addClass('pn-chip--tag')
+    new Chip(meta).setLabel(tag).setVariant('plain').el.addClass('tl-chip--tag')
   }
   if (task.ghIssue) {
     const chip = new Chip(meta).setLabel(task.ghIssue.split('#')[1] ?? '')
     chip.setVariant('plain')
-    setIcon(chip.el.createSpan({ cls: 'pn-chip-icon' }), 'github')
+    setIcon(chip.el.createSpan({ cls: 'tl-chip-icon' }), 'github')
   }
 
   if (task.due) {
-    const due = meta.createSpan({ cls: 'pn-kanban-due', text: task.due.slice(0, 10) })
+    const due = meta.createSpan({ cls: 'tl-kanban-due', text: task.due.slice(0, 10) })
     const dueDay = toDay(task.due)
     const complete = config.statuses.find((s) => s.id === task.status)?.complete
-    if (dueDay !== null && dueDay < todayDay() && !complete) due.addClass('pn-cell-overdue')
+    if (dueDay !== null && dueDay < todayDay() && !complete) due.addClass('tl-cell-overdue')
   }
 
   if (task.progress !== undefined && task.progress > 0) {
-    new ProgressBar(card.createDiv('pn-kanban-card-progress'))
+    new ProgressBar(card.createDiv('tl-kanban-card-progress'))
       .setValue(task.progress)
       .setSize('sm')
   }
 
   if (task.assignees.length) {
-    new AvatarStack(card.createDiv('pn-kanban-card-people'))
+    new AvatarStack(card.createDiv('tl-kanban-card-people'))
       .setNames(task.assignees)
       .setSize('sm')
   }
@@ -184,7 +184,7 @@ function renderCard(
 
 /** The first card whose midpoint is below the pointer — where the drop should land. */
 function cardBefore(list: HTMLElement, clientY: number): HTMLElement | null {
-  const cards = [...list.querySelectorAll<HTMLElement>('.pn-kanban-card:not(.pn-kanban-card--dragging)')]
+  const cards = [...list.querySelectorAll<HTMLElement>('.tl-kanban-card:not(.tl-kanban-card--dragging)')]
   for (const card of cards) {
     const box = card.getBoundingClientRect()
     if (clientY < box.top + box.height / 2) return card
@@ -199,7 +199,7 @@ function indexFor(list: HTMLElement, indicator: HTMLElement, ordered: string[]):
   let index = 0
   for (let i = 0; i < indicatorIndex; i++) {
     const child = children[i]
-    if (child instanceof HTMLElement && child.hasClass('pn-kanban-card')) {
+    if (child instanceof HTMLElement && child.hasClass('tl-kanban-card')) {
       const path = child.dataset.path
       if (path && ordered.includes(path)) index++
     }

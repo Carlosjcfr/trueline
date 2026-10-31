@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { Platform } from 'obsidian'
 
@@ -47,10 +47,10 @@ export class Popover {
     this.align = opts.align ?? 'left'
     this.width = opts.width
     this.onCloseCb = opts.onClose
-    this.el = createDiv('pn-pop')
-    if (Platform.isPhone) this.el.addClass('pn-pop--sheet')
+    this.el = createDiv('tl-pop')
+    if (Platform.isPhone) this.el.addClass('tl-pop--sheet')
     if (this.width != null) this.el.setCssProps({ '--pop-width': `${this.width}px` })
-    this.contentEl = this.el.createDiv('pn-pop-body')
+    this.contentEl = this.el.createDiv('tl-pop-body')
   }
 
   get isOpen(): boolean {

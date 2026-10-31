@@ -1,7 +1,7 @@
 {
-  "name": "projectnotes",
+  "name": "trueline",
   "version": "0.1.0",
-  "description": "Project management plugin for Obsidian built on the TaskNotes specification",
+  "description": "Project management for Obsidian built on the TaskNotes specification",
   "main": "main.js",
   "type": "module",
   "scripts": {

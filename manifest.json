@@ -1,9 +1,9 @@
 {
-  "id": "projectnotes",
-  "name": "ProjectNotes",
+  "id": "trueline",
+  "name": "Trueline",
   "version": "0.1.0",
   "minAppVersion": "1.13.0",
-  "description": "Project management over TaskNotes-spec data: one note per task, Gantt, Kanban and Table views, per-project fields, GitHub issue sync.",
+  "description": "Project management over plain notes: one note per task on the TaskNotes spec, with Table, Kanban, Gantt and Calendar views, time tracking and GitHub issue sync.",
   "author": "Carlos",
   "isDesktopOnly": false
 }

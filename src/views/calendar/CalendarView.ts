@@ -15,7 +15,7 @@
  */
 
 import { setIcon, setTooltip } from 'obsidian'
-import type ProjectNotesPlugin from '../../main'
+import type TruelinePlugin from '../../main'
 import type { Task } from '../../types'
 import { openTaskModal } from '../../modals/TaskModal'
 import { completeInstance, occurrencesBetween, uncompleteInstance } from '../../recurrence'
@@ -42,7 +42,7 @@ const WEEKDAY_HEADERS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
 export function renderCalendar(
   container: HTMLElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   tasks: Task[],
   projectPath: string | undefined,
   scope: CalendarScope,
@@ -53,7 +53,7 @@ export function renderCalendar(
   const { start, end } = windowFor(scope, anchor)
 
   // -- header ---------------------------------------------------------------
-  const header = container.createDiv('pn-cal-header')
+  const header = container.createDiv('tl-cal-header')
 
   const prev = header.createEl('button', { cls: 'clickable-icon' })
   setIcon(prev, 'chevron-left')
@@ -68,17 +68,17 @@ export function renderCalendar(
   })
 
   header.createSpan({
-    cls: 'pn-cal-title',
+    cls: 'tl-cal-title',
     text: scope === 'month' ? monthLabel(anchor) : `Semana ${weekNumber(anchor)} · ${monthLabel(anchor)}`
   })
 
-  const switcher = header.createDiv('pn-view-switcher')
+  const switcher = header.createDiv('tl-view-switcher')
   for (const [id, label] of [
     ['month', 'Mes'],
     ['week', 'Semana']
   ] as const) {
     const button = switcher.createEl('button', {
-      cls: `pn-view-btn${scope === id ? ' pn-view-btn--active' : ''}`,
+      cls: `tl-view-btn${scope === id ? ' tl-view-btn--active' : ''}`,
       text: label
     })
     button.addEventListener('click', () => onNavigate(id, anchor))
@@ -108,19 +108,19 @@ export function renderCalendar(
   }
 
   // -- grid -----------------------------------------------------------------
-  const grid = container.createDiv(`pn-cal-grid pn-cal-grid--${scope}`)
+  const grid = container.createDiv(`tl-cal-grid tl-cal-grid--${scope}`)
   for (const label of WEEKDAY_HEADERS) {
-    grid.createDiv({ cls: 'pn-cal-weekday', text: label })
+    grid.createDiv({ cls: 'tl-cal-weekday', text: label })
   }
 
   const today = todayDay()
   for (let day = start; day <= end; day++) {
     const date = fromDay(day)
-    const cell = grid.createDiv('pn-cal-cell')
-    if (day === today) cell.addClass('pn-cal-cell--today')
-    if (scope === 'month' && !inSameMonth(day, anchor)) cell.addClass('pn-cal-cell--outside')
+    const cell = grid.createDiv('tl-cal-cell')
+    if (day === today) cell.addClass('tl-cal-cell--today')
+    if (scope === 'month' && !inSameMonth(day, anchor)) cell.addClass('tl-cal-cell--outside')
 
-    const number = cell.createDiv('pn-cal-daynum')
+    const number = cell.createDiv('tl-cal-daynum')
     number.setText(String(new Date(day * 86_400_000).getUTCDate()))
 
     // Clicking empty space in a day creates a task scheduled there. It is the fastest
@@ -133,12 +133,12 @@ export function renderCalendar(
 
     cell.addEventListener('dragover', (event) => {
       event.preventDefault()
-      cell.addClass('pn-cal-cell--drop')
+      cell.addClass('tl-cal-cell--drop')
     })
-    cell.addEventListener('dragleave', () => cell.removeClass('pn-cal-cell--drop'))
+    cell.addEventListener('dragleave', () => cell.removeClass('tl-cal-cell--drop'))
     cell.addEventListener('drop', (event) => {
       event.preventDefault()
-      cell.removeClass('pn-cal-cell--drop')
+      cell.removeClass('tl-cal-cell--drop')
       const path = event.dataTransfer?.getData('text/plain')
       if (!path) return
       const dragged = plugin.tasks.get(path)
@@ -161,18 +161,18 @@ export function renderCalendar(
 
 function renderEntry(
   cell: HTMLElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   entry: Entry,
   config: { statuses: { id: string; color: string; complete: boolean }[] }
 ): void {
   const { task, occurrence, state } = entry
-  const pill = cell.createDiv(`pn-cal-entry pn-cal-entry--${state}`)
+  const pill = cell.createDiv(`tl-cal-entry tl-cal-entry--${state}`)
 
   const status = config.statuses.find((s) => s.id === task.status)
   pill.style.borderLeftColor = status?.color ?? 'var(--text-faint)'
 
   if (occurrence) {
-    const icon = pill.createSpan({ cls: 'pn-cal-entry-icon' })
+    const icon = pill.createSpan({ cls: 'tl-cal-entry-icon' })
     setIcon(icon, 'repeat')
     setTooltip(icon, 'Ocurrencia recurrente')
 
@@ -194,9 +194,9 @@ function renderEntry(
     })
   }
 
-  if (task.milestone) setIcon(pill.createSpan({ cls: 'pn-cal-entry-icon' }), 'diamond')
+  if (task.milestone) setIcon(pill.createSpan({ cls: 'tl-cal-entry-icon' }), 'diamond')
 
-  pill.createSpan({ cls: 'pn-cal-entry-title', text: task.title })
+  pill.createSpan({ cls: 'tl-cal-entry-title', text: task.title })
   pill.addEventListener('click', () => openTaskModal(plugin, task))
 }
 

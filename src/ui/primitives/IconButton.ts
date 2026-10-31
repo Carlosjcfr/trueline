@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { ExtraButtonComponent } from 'obsidian'
 
@@ -12,7 +12,7 @@ export class IconButton {
   constructor(parentEl: HTMLElement) {
     this.button = new ExtraButtonComponent(parentEl)
     this.el = this.button.extraSettingsEl
-    this.el.addClass('pn-icon-btn')
+    this.el.addClass('tl-icon-btn')
   }
 
   setIcon(name: string): this {
@@ -26,7 +26,7 @@ export class IconButton {
   }
 
   setRevealOnHover(enabled: boolean): this {
-    this.el.toggleClass('pn-icon-btn--hover-only', enabled)
+    this.el.toggleClass('tl-icon-btn--hover-only', enabled)
     return this
   }
 

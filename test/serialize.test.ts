@@ -129,3 +129,18 @@ describe('serializeTask', () => {
     expect(serializeTask(task).completedDate).toBe('2026-08-01')
   })
 })
+
+describe('rename to Trueline', () => {
+  it('reads the rank written by pre-rename builds and migrates it on write', () => {
+    const { task } = parseTask({ title: 'A', status: 'open', 'pn-rank': 'm' }, ctx)
+    expect(task.rank).toBe('m')
+    const out = serializeTask(task)
+    expect(out['tl-rank']).toBe('m')
+    expect('pn-rank' in out).toBe(false)
+  })
+
+  it('prefers the new key when both are present', () => {
+    const { task } = parseTask({ status: 'open', 'tl-rank': 'n', 'pn-rank': 'm' }, ctx)
+    expect(task.rank).toBe('n')
+  })
+})

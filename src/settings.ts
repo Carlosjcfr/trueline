@@ -8,7 +8,7 @@ import type { TaskIdentification } from './store/TaskStore'
 import type { ConflictPolicy, SyncDirection } from './github/sync'
 import { DEFAULT_SYNC_CONFIG, type GitHubSyncConfig } from './github/mapping'
 
-export interface ProjectNotesSettings {
+export interface TruelineSettings {
   identification: TaskIdentification
   tasksFolder: string
   projectsFolder: string
@@ -67,10 +67,10 @@ export const DEFAULT_PRIORITIES: PriorityConfig[] = [
   { id: 'low', label: 'Baja', color: '#64748b', icon: 'chevron-down', weight: 10 }
 ]
 
-export const DEFAULT_SETTINGS: ProjectNotesSettings = {
+export const DEFAULT_SETTINGS: TruelineSettings = {
   // Property mode by default: it is the only identification both TaskNotes and
   // Project Manager can be pointed at, so one vault serves all three plugins.
-  identification: { mode: 'property', key: 'pn-task', value: 'true' },
+  identification: { mode: 'property', key: 'tl-task', value: 'true' },
   tasksFolder: 'Proyectos/Tareas',
   projectsFolder: 'Proyectos',
   openTasksIn: 'tab',

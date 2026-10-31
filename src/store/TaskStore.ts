@@ -238,10 +238,20 @@ export class TaskStore {
         : String(fmTags ?? '').replace(/^#/, '') === key
       return inline || inFm
     }
-    const raw = meta.frontmatter?.[key]
-    if (raw === undefined || raw === null || raw === false || raw === '') return false
-    return value === undefined || String(raw) === value
+    if (matchesProperty(meta.frontmatter?.[key], value)) return true
+    // Notes created before the rename to Trueline carry the old default key. Reading it
+    // keeps them visible; they are not rewritten, so nothing changes until the user does.
+    const legacy = LEGACY_TASK_KEYS[key]
+    return legacy !== undefined && matchesProperty(meta.frontmatter?.[legacy], value)
   }
+}
+
+/** Old default identification keys, by the key that replaced them. */
+const LEGACY_TASK_KEYS: Record<string, string> = { 'tl-task': 'pn-task' }
+
+function matchesProperty(raw: unknown, value: string | undefined): boolean {
+  if (raw === undefined || raw === null || raw === false || raw === '') return false
+  return value === undefined || String(raw) === value
 }
 
 /**

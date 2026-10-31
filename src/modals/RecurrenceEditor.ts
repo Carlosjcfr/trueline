@@ -55,15 +55,15 @@ export function renderRecurrenceEditor(
   options: RecurrenceEditorOptions
 ): void {
   const { task } = options
-  const panel = container.createDiv('pn-recur-panel')
+  const panel = container.createDiv('tl-recur-panel')
 
   const state = readState(task.recurrence)
   const expressible = state !== null
 
   if (!expressible) {
     // Unrecognised but valid: show it, summarise it, and leave it alone.
-    const custom = panel.createDiv('pn-recur-custom')
-    custom.createSpan({ cls: 'pn-recur-summary', text: describeRecurrence(task.recurrence ?? '') })
+    const custom = panel.createDiv('tl-recur-custom')
+    custom.createSpan({ cls: 'tl-recur-summary', text: describeRecurrence(task.recurrence ?? '') })
     const raw = custom.createEl('input', { attr: { type: 'text' } })
     raw.value = task.recurrence ?? ''
     raw.addEventListener('change', () => {
@@ -79,12 +79,12 @@ export function renderRecurrenceEditor(
     render()
   }
 
-  const body = panel.createDiv('pn-recur-body')
+  const body = panel.createDiv('tl-recur-body')
 
   const render = (): void => {
     body.empty()
 
-    const row = body.createDiv('pn-recur-row')
+    const row = body.createDiv('tl-recur-row')
     const freq = row.createEl('select', { cls: 'dropdown' })
     for (const [id, label] of [
       ['none', 'No se repite'],
@@ -104,7 +104,7 @@ export function renderRecurrenceEditor(
     if (current.frequency === 'none') return
 
     const every = row.createEl('input', {
-      cls: 'pn-recur-interval',
+      cls: 'tl-recur-interval',
       attr: { type: 'number', min: '1', max: '99' }
     })
     every.value = String(current.interval)
@@ -113,14 +113,14 @@ export function renderRecurrenceEditor(
       current.interval = Number.isFinite(value) && value > 0 ? Math.floor(value) : 1
       emit()
     })
-    row.createSpan({ cls: 'pn-recur-unit', text: unitLabel(current.frequency) })
+    row.createSpan({ cls: 'tl-recur-unit', text: unitLabel(current.frequency) })
 
     if (current.frequency === 'weekly') {
-      const days = body.createDiv('pn-recur-days')
+      const days = body.createDiv('tl-recur-days')
       for (const day of WEEKDAYS) {
         const active = current.weekdays.includes(day.code)
         const chip = days.createEl('button', {
-          cls: `pn-recur-day${active ? ' pn-recur-day--on' : ''}`,
+          cls: `tl-recur-day${active ? ' tl-recur-day--on' : ''}`,
           text: day.label
         })
         chip.addEventListener('click', () => {
@@ -132,7 +132,7 @@ export function renderRecurrenceEditor(
       }
     }
 
-    const endRow = body.createDiv('pn-recur-row')
+    const endRow = body.createDiv('tl-recur-row')
     const end = endRow.createEl('select', { cls: 'dropdown' })
     for (const [id, label] of [
       ['never', 'Sin fin'],
@@ -168,8 +168,8 @@ export function renderRecurrenceEditor(
     }
 
     // -- anchor -------------------------------------------------------------
-    const anchorRow = body.createDiv('pn-recur-row')
-    anchorRow.createSpan({ cls: 'pn-recur-label', text: 'Contar desde' })
+    const anchorRow = body.createDiv('tl-recur-row')
+    anchorRow.createSpan({ cls: 'tl-recur-label', text: 'Contar desde' })
     const anchor = anchorRow.createEl('select', { cls: 'dropdown' })
     anchor.createEl('option', { value: 'scheduled', text: 'La fecha prevista' })
     anchor.createEl('option', { value: 'completion', text: 'Cuando la completo' })
@@ -189,11 +189,11 @@ function renderPreview(container: HTMLElement, state: EditorState, task: Task): 
   const rule = buildRule(state, task)
   if (!rule) return
 
-  const preview = container.createDiv('pn-recur-preview')
+  const preview = container.createDiv('tl-recur-preview')
   try {
     parseRecurrence(rule, task)
   } catch (error) {
-    preview.addClass('pn-recur-preview--error')
+    preview.addClass('tl-recur-preview--error')
     preview.setText(error instanceof Error ? error.message : 'Regla inválida')
     return
   }
@@ -210,9 +210,9 @@ function renderPreview(container: HTMLElement, state: EditorState, task: Task): 
     return
   }
 
-  preview.createSpan({ cls: 'pn-recur-preview-label', text: 'Próximas:' })
+  preview.createSpan({ cls: 'tl-recur-preview-label', text: 'Próximas:' })
   for (const date of dates) {
-    preview.createSpan({ cls: 'pn-recur-preview-date', text: date })
+    preview.createSpan({ cls: 'tl-recur-preview-date', text: date })
   }
 }
 

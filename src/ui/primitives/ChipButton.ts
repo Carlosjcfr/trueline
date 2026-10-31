@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { ButtonComponent } from 'obsidian'
 
@@ -12,7 +12,7 @@ export class ChipButton {
   constructor(parentEl: HTMLElement) {
     this.button = new ButtonComponent(parentEl)
     this.el = this.button.buttonEl
-    this.el.addClass('pn-chip-btn')
+    this.el.addClass('tl-chip-btn')
   }
 
   setLabel(text: string): this {
@@ -21,12 +21,12 @@ export class ChipButton {
   }
 
   setActive(active: boolean): this {
-    this.el.toggleClass('pn-chip-btn--active', active)
+    this.el.toggleClass('tl-chip-btn--active', active)
     return this
   }
 
   setShape(shape: 'rounded' | 'pill'): this {
-    this.el.toggleClass('pn-chip-btn--pill', shape === 'pill')
+    this.el.toggleClass('tl-chip-btn--pill', shape === 'pill')
     return this
   }
 

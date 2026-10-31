@@ -27,7 +27,7 @@
 import { Notice, type App } from 'obsidian'
 import type { Task } from '../types'
 import type { TaskStore } from '../store/TaskStore'
-import type { ProjectNotesSettings } from '../settings'
+import type { TruelineSettings } from '../settings'
 import { createTask } from '../store/create'
 import { GitHubClient, type GitHubIssue } from './client'
 import {
@@ -119,7 +119,7 @@ export class GitHubSync {
   constructor(
     private readonly app: App,
     private readonly tasks: TaskStore,
-    private readonly settings: () => ProjectNotesSettings
+    private readonly settings: () => TruelineSettings
   ) {
     this.client = new GitHubClient(this.settings().github.token)
   }

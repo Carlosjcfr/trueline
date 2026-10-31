@@ -1,5 +1,5 @@
 /**
- * Data model for ProjectNotes.
+ * Data model for Trueline.
  *
  * The task shape follows the TaskNotes specification (semantic roles, §2), so any
  * other conforming tool can read and write the same files. Fields marked EXTENSION

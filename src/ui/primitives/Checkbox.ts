@@ -1,14 +1,14 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 /** Obsidian's native checkbox, for anything stored as a plain boolean. */
 export class Checkbox {
   el: HTMLInputElement
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createEl('input', { type: 'checkbox', cls: 'pn-checkbox' })
+    this.el = parentEl.createEl('input', { type: 'checkbox', cls: 'tl-checkbox' })
   }
 
   setChecked(checked: boolean): this {

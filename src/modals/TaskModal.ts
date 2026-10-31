@@ -11,7 +11,7 @@
  */
 
 import { Modal, Setting, setIcon } from 'obsidian'
-import type ProjectNotesPlugin from '../main'
+import type TruelinePlugin from '../main'
 import type { CustomFieldDef, Task, TaskType } from '../types'
 import { isCompleteStatus } from '../settings'
 import { renderPropRow } from '../ui/FormField'
@@ -24,12 +24,12 @@ import { renderRecurrenceEditor } from './RecurrenceEditor'
 import { instanceState, nextOccurrence } from '../recurrence'
 import { todayDay, toDay } from '../dates'
 
-export function openTaskModal(plugin: ProjectNotesPlugin, task: Task): void {
+export function openTaskModal(plugin: TruelinePlugin, task: Task): void {
   new TaskModal(plugin, task).open()
 }
 
 /** The type a task has, read off its data rather than a stored label. */
-export function taskType(plugin: ProjectNotesPlugin, task: Task): TaskType {
+export function taskType(plugin: TruelinePlugin, task: Task): TaskType {
   if (task.milestone) return 'milestone'
   for (const ref of task.projects) {
     if (plugin.tasks.resolve(ref, task.path)) return 'subtask'
@@ -46,7 +46,7 @@ class TaskModal extends Modal {
   private disposers: (() => void)[] = []
 
   constructor(
-    private readonly plugin: ProjectNotesPlugin,
+    private readonly plugin: TruelinePlugin,
     private readonly task: Task
   ) {
     super(plugin.app)
@@ -54,7 +54,7 @@ class TaskModal extends Modal {
   }
 
   override onOpen(): void {
-    this.modalEl.addClass('pn-task-modal')
+    this.modalEl.addClass('tl-task-modal')
     this.render()
   }
 
@@ -86,7 +86,7 @@ class TaskModal extends Modal {
 
     // -- title -------------------------------------------------------------
     const titleInput = contentEl.createEl('input', {
-      cls: 'pn-task-title',
+      cls: 'tl-task-title',
       attr: { type: 'text', placeholder: 'Título de la tarea' }
     })
     titleInput.value = this.draft.title
@@ -94,14 +94,14 @@ class TaskModal extends Modal {
       this.draft.title = titleInput.value
     })
 
-    const grid = contentEl.createDiv('pn-prop-grid')
+    const grid = contentEl.createDiv('tl-prop-grid')
 
     // -- status ------------------------------------------------------------
     renderPropRow(
       grid,
       'Estado',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         const select = wrap.createEl('select', { cls: 'dropdown' })
         for (const status of config.statuses) {
           select.createEl('option', { value: status.id, text: status.label })
@@ -121,7 +121,7 @@ class TaskModal extends Modal {
       grid,
       'Prioridad',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         const select = wrap.createEl('select', { cls: 'dropdown' })
         select.createEl('option', { value: '', text: '—' })
         for (const priority of config.priorities) {
@@ -141,7 +141,7 @@ class TaskModal extends Modal {
       grid,
       'Tipo',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         const select = wrap.createEl('select', { cls: 'dropdown' })
         select.createEl('option', { value: 'task', text: 'Tarea' })
         select.createEl('option', { value: 'milestone', text: 'Hito' })
@@ -168,7 +168,7 @@ class TaskModal extends Modal {
       grid,
       'Progreso',
       () => {
-        const wrap = createDiv('pn-prop-value pn-prop-value--progress')
+        const wrap = createDiv('tl-prop-value tl-prop-value--progress')
         const bar = new ProgressBar(wrap)
         const slider = wrap.createEl('input', {
           attr: { type: 'range', min: '0', max: '100', step: '5' }
@@ -189,7 +189,7 @@ class TaskModal extends Modal {
       grid,
       'Estimación (h)',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         const input = wrap.createEl('input', {
           attr: { type: 'number', min: '0', step: '0.25', placeholder: '0' }
         })
@@ -214,7 +214,7 @@ class TaskModal extends Modal {
       grid,
       'Asignados',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         if (this.draft.assignees.length) {
           new AvatarStack(wrap).setNames(this.draft.assignees)
         }
@@ -235,9 +235,9 @@ class TaskModal extends Modal {
       grid,
       'Etiquetas',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         for (const tag of this.draft.tags) {
-          new Chip(wrap).setLabel(tag).setVariant('plain').el.addClass('pn-chip--tag')
+          new Chip(wrap).setLabel(tag).setVariant('plain').el.addClass('tl-chip--tag')
         }
         const input = wrap.createEl('input', {
           attr: { type: 'text', placeholder: 'etiqueta, etiqueta' }
@@ -257,7 +257,7 @@ class TaskModal extends Modal {
       grid,
       'Proyecto',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         for (const ref of this.draft.projects) {
           new Chip(wrap).setLabel(linkLabel(ref)).setVariant('outline')
         }
@@ -280,13 +280,13 @@ class TaskModal extends Modal {
         grid,
         'Bloqueada por',
         () => {
-          const wrap = createDiv('pn-prop-value')
+          const wrap = createDiv('tl-prop-value')
           for (const dep of this.draft.blockedBy) {
             const resolved = this.plugin.tasks.resolve(dep.uid, this.draft.path)
             const chip = new Chip(wrap)
               .setLabel(resolved?.title ?? linkLabel(dep.uid))
               .setVariant(resolved ? 'outline' : 'plain')
-            if (!resolved) chip.el.addClass('pn-chip--unresolved')
+            if (!resolved) chip.el.addClass('tl-chip--unresolved')
           }
           return wrap
         },
@@ -304,10 +304,10 @@ class TaskModal extends Modal {
       grid,
       'Adjuntos',
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         for (const ref of this.draft.attachments) {
           const chip = new Chip(wrap).setLabel(linkLabel(ref)).setVariant('outline')
-          setIcon(chip.el.createSpan({ cls: 'pn-chip-icon' }), 'paperclip')
+          setIcon(chip.el.createSpan({ cls: 'tl-chip-icon' }), 'paperclip')
         }
         const input = wrap.createEl('input', {
           attr: { type: 'text', placeholder: '[[archivo.pdf]]' }
@@ -323,7 +323,7 @@ class TaskModal extends Modal {
     )
 
     // -- recurrence --------------------------------------------------------
-    const recurrenceSection = contentEl.createDiv('pn-modal-section')
+    const recurrenceSection = contentEl.createDiv('tl-modal-section')
     recurrenceSection.createEl('h4', { text: 'Repetición' })
     renderRecurrenceEditor(recurrenceSection, {
       task: this.draft,
@@ -337,7 +337,7 @@ class TaskModal extends Modal {
     if (this.draft.recurrence) this.renderInstanceRow(recurrenceSection)
 
     // -- time tracking -----------------------------------------------------
-    const timeSection = contentEl.createDiv('pn-modal-section')
+    const timeSection = contentEl.createDiv('tl-modal-section')
     timeSection.createEl('h4', { text: 'Tiempo' })
     this.disposers.push(
       renderTimePanel(timeSection, this.plugin.tasks.get(this.task.path) ?? this.draft, {
@@ -377,10 +377,10 @@ class TaskModal extends Modal {
         : (nextOccurrence(task, today - 1)?.date ?? new Date().toISOString().slice(0, 10))
 
     const state = instanceState(task, target)
-    const row = container.createDiv('pn-recur-instance')
+    const row = container.createDiv('tl-recur-instance')
     row.createSpan({ text: `Ocurrencia ${target}: ` })
     row.createSpan({
-      cls: `pn-recur-state pn-recur-state--${state}`,
+      cls: `tl-recur-state tl-recur-state--${state}`,
       text: state === 'completed' ? 'completada' : state === 'skipped' ? 'saltada' : 'pendiente'
     })
 
@@ -419,7 +419,7 @@ class TaskModal extends Modal {
       grid,
       label,
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         const input = wrap.createEl('input', { attr: { type: 'date' } })
         input.value = (this.draft[key] ?? '').slice(0, 10)
         input.addEventListener('change', () => {
@@ -436,7 +436,7 @@ class TaskModal extends Modal {
       grid,
       field.label,
       () => {
-        const wrap = createDiv('pn-prop-value')
+        const wrap = createDiv('tl-prop-value')
         const current = this.draft.customFields[field.key]
 
         if (field.type === 'checkbox') {

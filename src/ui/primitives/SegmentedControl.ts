@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { ButtonComponent } from 'obsidian'
 
@@ -20,7 +20,7 @@ export class SegmentedControl<T extends string> {
   el: HTMLElement
 
   constructor(parentEl: HTMLElement, props: SegmentedControlProps<T>) {
-    this.el = parentEl.createDiv('pn-segmented')
+    this.el = parentEl.createDiv('tl-segmented')
     const buttons = new Map<T, ButtonComponent>()
     for (const opt of props.options) {
       const btn = new ButtonComponent(this.el).setButtonText(opt.label).onClick(() => {

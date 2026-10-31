@@ -20,17 +20,17 @@ import type {
   StatusConfig,
   ViewMode
 } from '../types'
-import type { ProjectNotesSettings } from '../settings'
+import type { TruelineSettings } from '../settings'
 import { parseLink, stripExtension } from './links'
 
-const PROJECT_KEY = 'pn-project'
+const PROJECT_KEY = 'tl-project'
 
 export class ProjectStore {
   private readonly byPath = new Map<string, Project>()
 
   constructor(
     private readonly app: App,
-    private readonly settings: () => ProjectNotesSettings
+    private readonly settings: () => TruelineSettings
   ) {}
 
   rebuild(): void {
@@ -95,10 +95,12 @@ export class ProjectStore {
   private ingest(file: TFile): void {
     const meta = this.app.metadataCache.getFileCache(file)
     const fm = meta?.frontmatter as Record<string, unknown> | undefined
-    if (!fm || fm[PROJECT_KEY] !== true) return
+    // `pn-project` is the key used before the rename to Trueline.
+    if (!fm || (fm[PROJECT_KEY] !== true && fm['pn-project'] !== true)) return
 
     const known = new Set([
       PROJECT_KEY,
+      'pn-project',
       'id',
       'title',
       'color',

@@ -1,7 +1,7 @@
 /*
  * Adapted from Project Manager for Obsidian.
  * Copyright (c) 2026 Stepan Kropachev. MIT — see licenses/obsidian-pm.LICENSE
- * Changes: `pm-` CSS prefix renamed to `pn-`, utils import repointed.
+ * Changes: `pm-` CSS prefix renamed to `tl-`, utils import repointed.
  */
 import { setIcon, setTooltip } from 'obsidian'
 
@@ -14,13 +14,13 @@ export class Chip {
   private iconEl: HTMLElement | null = null
 
   constructor(parentEl: HTMLElement) {
-    this.el = parentEl.createSpan({ cls: 'pn-chip' })
-    this.labelEl = this.el.createSpan({ cls: 'pn-chip-label' })
+    this.el = parentEl.createSpan({ cls: 'tl-chip' })
+    this.labelEl = this.el.createSpan({ cls: 'tl-chip-label' })
   }
 
   setLeadingIcon(name: string): this {
     if (!this.iconEl) {
-      this.iconEl = this.el.createSpan({ cls: 'pn-chip-icon' })
+      this.iconEl = this.el.createSpan({ cls: 'tl-chip-icon' })
       this.el.prepend(this.iconEl)
     }
     setIcon(this.iconEl, name)
@@ -33,20 +33,20 @@ export class Chip {
   }
 
   setColor(color: string): this {
-    this.el.style.setProperty('--pn-chip-color', color)
+    this.el.style.setProperty('--tl-chip-color', color)
     return this
   }
 
   setVariant(variant: ChipVariant): this {
-    this.el.toggleClass('pn-chip--solid', variant === 'solid')
-    this.el.toggleClass('pn-chip--outline', variant === 'outline')
-    this.el.toggleClass('pn-chip--plain', variant === 'plain')
+    this.el.toggleClass('tl-chip--solid', variant === 'solid')
+    this.el.toggleClass('tl-chip--outline', variant === 'outline')
+    this.el.toggleClass('tl-chip--plain', variant === 'plain')
     return this
   }
 
   setDot(show = true): this {
     if (show && !this.dotEl) {
-      this.dotEl = this.el.createSpan({ cls: 'pn-chip-dot' })
+      this.dotEl = this.el.createSpan({ cls: 'tl-chip-dot' })
       this.el.prepend(this.dotEl)
     } else if (!show && this.dotEl) {
       this.dotEl.remove()
@@ -56,22 +56,22 @@ export class Chip {
   }
 
   setTag(isTag = true): this {
-    this.el.toggleClass('pn-chip--tag', isTag)
+    this.el.toggleClass('tl-chip--tag', isTag)
     return this
   }
 
   setStrong(strong = true): this {
-    this.el.toggleClass('pn-chip--strong', strong)
+    this.el.toggleClass('tl-chip--strong', strong)
     return this
   }
 
   setShape(shape: 'rounded' | 'pill'): this {
-    this.el.toggleClass('pn-chip--pill', shape === 'pill')
+    this.el.toggleClass('tl-chip--pill', shape === 'pill')
     return this
   }
 
   setSize(size: 'md' | 'sm'): this {
-    this.el.toggleClass('pn-chip--sm', size === 'sm')
+    this.el.toggleClass('tl-chip--sm', size === 'sm')
     return this
   }
 
@@ -81,7 +81,7 @@ export class Chip {
   }
 
   setRemovable(onRemove: () => void): this {
-    const rmBtn = this.el.createEl('button', { cls: 'pn-chip-rm' })
+    const rmBtn = this.el.createEl('button', { cls: 'tl-chip-rm' })
     setIcon(rmBtn, 'x')
     rmBtn.onclick = (e) => {
       e.preventDefault()
@@ -92,7 +92,7 @@ export class Chip {
   }
 
   onClick(handler: (e: MouseEvent) => unknown): this {
-    this.el.addClass('pn-chip--interactive')
+    this.el.addClass('tl-chip--interactive')
     this.el.addEventListener('click', handler)
     return this
   }

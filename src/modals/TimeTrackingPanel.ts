@@ -9,7 +9,7 @@
  */
 
 import { Notice, setIcon, setTooltip } from 'obsidian'
-import type ProjectNotesPlugin from '../main'
+import type TruelinePlugin from '../main'
 import type { Task } from '../types'
 import {
   addManualEntry,
@@ -23,7 +23,7 @@ import {
 } from '../store/timer'
 
 export interface TimePanelOptions {
-  plugin: ProjectNotesPlugin
+  plugin: TruelinePlugin
   /** Re-read from the store; the draft's own copy of timeEntries is now stale. */
   onChange: () => void
 }
@@ -34,14 +34,14 @@ export function renderTimePanel(
   options: TimePanelOptions
 ): () => void {
   const { plugin, onChange } = options
-  const panel = container.createDiv('pn-time-panel')
+  const panel = container.createDiv('tl-time-panel')
   const running = isRunning(task)
 
   // -- header: play/pause, running total, estimate ---------------------------
-  const header = panel.createDiv('pn-time-header')
+  const header = panel.createDiv('tl-time-header')
 
   const button = header.createEl('button', {
-    cls: `pn-time-toggle${running ? ' pn-time-toggle--running' : ''}`
+    cls: `tl-time-toggle${running ? ' tl-time-toggle--running' : ''}`
   })
   setIcon(button, running ? 'pause' : 'play')
   setTooltip(button, running ? 'Pausar' : 'Iniciar')
@@ -50,14 +50,14 @@ export function renderTimePanel(
     onChange()
   })
 
-  const live = header.createSpan({ cls: 'pn-time-live' })
-  const totals = header.createSpan({ cls: 'pn-time-totals' })
+  const live = header.createSpan({ cls: 'tl-time-live' })
+  const totals = header.createSpan({ cls: 'tl-time-totals' })
 
   const paint = (): void => {
     const current = plugin.tasks.get(task.path) ?? task
     const tracked = trackedMinutes(current)
     live.setText(isRunning(current) ? formatDuration(elapsedMs(current), true) : '')
-    live.toggleClass('pn-time-live--on', isRunning(current))
+    live.toggleClass('tl-time-live--on', isRunning(current))
 
     const estimate = current.timeEstimate
     totals.setText(
@@ -66,7 +66,7 @@ export function renderTimePanel(
         : formatMinutes(tracked)
     )
     // Over estimate is worth seeing at a glance, not buried in a report.
-    totals.toggleClass('pn-time-over', Boolean(estimate) && tracked > (estimate ?? 0))
+    totals.toggleClass('tl-time-over', Boolean(estimate) && tracked > (estimate ?? 0))
   }
   paint()
 
@@ -75,9 +75,9 @@ export function renderTimePanel(
 
   // -- sessions --------------------------------------------------------------
   if (task.timeEntries.length) {
-    const list = panel.createDiv('pn-time-list')
+    const list = panel.createDiv('tl-time-list')
     task.timeEntries.forEach((entry, index) => {
-      const row = list.createDiv('pn-time-row')
+      const row = list.createDiv('tl-time-row')
       const open = !entry.endTime
 
       const start = new Date(entry.startTime)
@@ -85,20 +85,20 @@ export function renderTimePanel(
       const minutes = end ? Math.round((end.getTime() - start.getTime()) / 60_000) : 0
 
       row.createSpan({
-        cls: 'pn-time-row-date',
+        cls: 'tl-time-row-date',
         text: entry.startTime.slice(0, 10)
       })
       row.createSpan({
-        cls: 'pn-time-row-span',
+        cls: 'tl-time-row-span',
         text: `${clock(start)}–${end ? clock(end) : '…'}`
       })
       row.createSpan({
-        cls: `pn-time-row-len${open ? ' pn-time-live--on' : ''}`,
+        cls: `tl-time-row-len${open ? ' tl-time-live--on' : ''}`,
         text: open ? 'en curso' : formatMinutes(minutes)
       })
 
       const note = row.createEl('input', {
-        cls: 'pn-time-row-note',
+        cls: 'tl-time-row-note',
         attr: { type: 'text', placeholder: 'Nota' }
       })
       note.value = entry.description ?? ''
@@ -110,7 +110,7 @@ export function renderTimePanel(
         onChange()
       })
 
-      const remove = row.createSpan({ cls: 'pn-time-row-remove' })
+      const remove = row.createSpan({ cls: 'tl-time-row-remove' })
       setIcon(remove, 'trash-2')
       setTooltip(remove, 'Eliminar sesión')
       remove.addEventListener('click', async () => {
@@ -121,7 +121,7 @@ export function renderTimePanel(
   }
 
   // -- manual entry ----------------------------------------------------------
-  const manual = panel.createDiv('pn-time-manual')
+  const manual = panel.createDiv('tl-time-manual')
   const dateInput = manual.createEl('input', { attr: { type: 'date' } })
   dateInput.value = new Date().toISOString().slice(0, 10)
   const minutesInput = manual.createEl('input', {

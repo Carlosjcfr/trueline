@@ -14,7 +14,7 @@
  */
 
 import { Notice, setIcon } from 'obsidian'
-import type ProjectNotesPlugin from '../../main'
+import type TruelinePlugin from '../../main'
 import type { Task } from '../../types'
 import { fromDay, toDay, todayDay, monthLabel, quarterLabel, weekNumber } from '../../dates'
 import { openTaskModal } from '../../modals/TaskModal'
@@ -60,7 +60,7 @@ interface DragState {
 
 export function renderGantt(
   container: HTMLElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   tasks: Task[],
   projectPath: string | undefined,
   granularity: Granularity,
@@ -74,10 +74,10 @@ export function renderGantt(
   const dated = tasks.filter((task) => task.scheduled || task.due)
   const undated = tasks.filter((task) => !task.scheduled && !task.due)
 
-  const controls = container.createDiv('pn-gantt-controls')
+  const controls = container.createDiv('tl-gantt-controls')
   for (const level of GRANULARITIES) {
     const button = controls.createEl('button', {
-      cls: `pn-view-btn${granularity === level.id ? ' pn-view-btn--active' : ''}`,
+      cls: `tl-view-btn${granularity === level.id ? ' tl-view-btn--active' : ''}`,
       text: level.label
     })
     button.addEventListener('click', () => onGranularityChange(level.id))
@@ -85,7 +85,7 @@ export function renderGantt(
   const todayButton = controls.createEl('button', { text: 'Hoy' })
 
   if (dated.length === 0) {
-    container.createDiv('pn-empty-state').setText('Ninguna tarea tiene fechas todavía.')
+    container.createDiv('tl-empty-state').setText('Ninguna tarea tiene fechas todavía.')
     return () => {}
   }
 
@@ -93,27 +93,27 @@ export function renderGantt(
   const rows = dated.slice().sort(byStart)
   const height = HEADER_HEIGHT + rows.length * ROW_HEIGHT
 
-  const chart = container.createDiv('pn-gantt')
-  const labels = chart.createDiv('pn-gantt-labels')
+  const chart = container.createDiv('tl-gantt')
+  const labels = chart.createDiv('tl-gantt-labels')
   labels.style.width = `${LABEL_WIDTH}px`
-  const right = chart.createDiv('pn-gantt-right')
+  const right = chart.createDiv('tl-gantt-right')
 
   // -- labels --------------------------------------------------------------
-  labels.createDiv('pn-gantt-label-header').style.height = `${HEADER_HEIGHT}px`
+  labels.createDiv('tl-gantt-label-header').style.height = `${HEADER_HEIGHT}px`
   for (const task of rows) {
-    const row = labels.createDiv('pn-gantt-label-row')
+    const row = labels.createDiv('tl-gantt-label-row')
     row.style.height = `${ROW_HEIGHT}px`
     const status = config.statuses.find((s) => s.id === task.status)
-    const icon = row.createSpan({ cls: 'pn-gantt-label-icon' })
+    const icon = row.createSpan({ cls: 'tl-gantt-label-icon' })
     setIcon(icon, task.milestone ? 'diamond' : (status?.icon ?? 'circle'))
     icon.style.color = status?.color ?? 'var(--text-muted)'
-    const link = row.createSpan({ cls: 'pn-task-link', text: task.title })
+    const link = row.createSpan({ cls: 'tl-task-link', text: task.title })
     link.addEventListener('click', () => openTaskModal(plugin, task))
   }
 
   // -- header scale --------------------------------------------------------
   const headerSvg = svgEl('svg', {
-    class: 'pn-gantt-header-svg',
+    class: 'tl-gantt-header-svg',
     width: timeline.totalWidth,
     height: HEADER_HEIGHT
   })
@@ -122,7 +122,7 @@ export function renderGantt(
 
   // -- chart body ----------------------------------------------------------
   const svg = svgEl('svg', {
-    class: 'pn-gantt-svg',
+    class: 'tl-gantt-svg',
     width: timeline.totalWidth,
     height: height - HEADER_HEIGHT
   })
@@ -164,7 +164,7 @@ export function renderGantt(
     const state = drag.current
     if (!state) return
     drag.current = null
-    document.body.removeClass('pn-dragging')
+    document.body.removeClass('tl-dragging')
 
     const startX = Number(state.rect.getAttribute('x'))
     const width = Number(state.rect.getAttribute('width'))
@@ -185,10 +185,10 @@ export function renderGantt(
 
   // -- undated tasks -------------------------------------------------------
   if (undated.length) {
-    const box = container.createDiv('pn-gantt-undated')
-    box.createSpan({ cls: 'pn-gantt-undated-label', text: 'Sin fechas:' })
+    const box = container.createDiv('tl-gantt-undated')
+    box.createSpan({ cls: 'tl-gantt-undated-label', text: 'Sin fechas:' })
     for (const task of undated) {
-      const chip = box.createSpan({ cls: 'pn-chip pn-chip--outline', text: task.title })
+      const chip = box.createSpan({ cls: 'tl-chip tl-chip--outline', text: task.title })
       chip.addEventListener('click', () => openTaskModal(plugin, task))
     }
   }
@@ -233,9 +233,9 @@ function renderScale(svg: SVGSVGElement, timeline: Timeline): void {
 
     if (major) {
       group.appendChild(
-        svgEl('line', { x1: x, y1: 0, x2: x, y2: HEADER_HEIGHT, class: 'pn-gantt-tick' })
+        svgEl('line', { x1: x, y1: 0, x2: x, y2: HEADER_HEIGHT, class: 'tl-gantt-tick' })
       )
-      const label = svgEl('text', { x: x + 4, y: 20, class: 'pn-gantt-scale-major' })
+      const label = svgEl('text', { x: x + 4, y: 20, class: 'tl-gantt-scale-major' })
       label.textContent = major
       group.appendChild(label)
     }
@@ -245,7 +245,7 @@ function renderScale(svg: SVGSVGElement, timeline: Timeline): void {
       const label = svgEl('text', {
         x: x + timeline.dayWidth / 2,
         y: 40,
-        class: 'pn-gantt-scale-minor',
+        class: 'tl-gantt-scale-minor',
         'text-anchor': 'middle'
       })
       label.textContent = minor
@@ -272,7 +272,7 @@ function majorTick(timeline: Timeline, day: number): string | null {
 }
 
 function renderGrid(svg: SVGSVGElement, timeline: Timeline, rowCount: number): void {
-  const group = svgEl('g', { class: 'pn-gantt-grid' })
+  const group = svgEl('g', { class: 'tl-gantt-grid' })
   const height = rowCount * ROW_HEIGHT
 
   for (let i = 0; i < timeline.totalDays; i++) {
@@ -286,7 +286,7 @@ function renderGrid(svg: SVGSVGElement, timeline: Timeline, rowCount: number): v
           y: 0,
           width: timeline.dayWidth,
           height,
-          class: 'pn-gantt-weekend'
+          class: 'tl-gantt-weekend'
         })
       )
     }
@@ -300,7 +300,7 @@ function renderGrid(svg: SVGSVGElement, timeline: Timeline, rowCount: number): v
 
     if (drawLine) {
       group.appendChild(
-        svgEl('line', { x1: x, y1: 0, x2: x, y2: height, class: 'pn-gantt-gridline-v' })
+        svgEl('line', { x1: x, y1: 0, x2: x, y2: height, class: 'tl-gantt-gridline-v' })
       )
     }
   }
@@ -313,7 +313,7 @@ function renderGrid(svg: SVGSVGElement, timeline: Timeline, rowCount: number): v
         y1: y,
         x2: timeline.totalWidth,
         y2: y,
-        class: 'pn-gantt-gridline-h'
+        class: 'tl-gantt-gridline-h'
       })
     )
   }
@@ -324,13 +324,13 @@ function renderTodayLine(svg: SVGSVGElement, timeline: Timeline, height: number)
   const x = dateToX(timeline, todayDay())
   if (x < 0 || x > timeline.totalWidth) return
   svg.appendChild(
-    svgEl('line', { x1: x, y1: 0, x2: x, y2: height, class: 'pn-gantt-today-line' })
+    svgEl('line', { x1: x, y1: 0, x2: x, y2: height, class: 'tl-gantt-today-line' })
   )
 }
 
 function renderBar(
   svg: SVGSVGElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   timeline: Timeline,
   task: Task,
   index: number,
@@ -347,7 +347,7 @@ function renderBar(
   const width = Math.max(timeline.dayWidth, dateToX(timeline, bounds.end + 1) - x)
   const color = config.statuses.find((s) => s.id === task.status)?.color ?? '#3b82f6'
 
-  const group = svgEl('g', { class: 'pn-gantt-bar-group' })
+  const group = svgEl('g', { class: 'tl-gantt-bar-group' })
 
   if (task.milestone) {
     const cx = x + timeline.dayWidth / 2
@@ -355,14 +355,14 @@ function renderBar(
     const size = Math.min(barHeight, 16) / 2
     const diamond = svgEl('polygon', {
       points: `${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`,
-      class: 'pn-gantt-milestone',
+      class: 'tl-gantt-milestone',
       fill: color
     })
     group.appendChild(diamond)
     const label = svgEl('text', {
       x: cx + size + 6,
       y: cy + 4,
-      class: 'pn-gantt-milestone-label'
+      class: 'tl-gantt-milestone-label'
     })
     label.textContent = task.title
     group.appendChild(label)
@@ -376,7 +376,7 @@ function renderBar(
     width,
     height: barHeight,
     rx: 6,
-    class: 'pn-gantt-bar',
+    class: 'tl-gantt-bar',
     fill: color
   })
   group.appendChild(rect)
@@ -389,7 +389,7 @@ function renderBar(
         width: (width * Math.min(100, task.progress)) / 100,
         height: barHeight,
         rx: 6,
-        class: 'pn-gantt-bar-progress'
+        class: 'tl-gantt-bar-progress'
       })
     )
   }
@@ -397,7 +397,7 @@ function renderBar(
   const label = svgEl('text', {
     x: x + 8,
     y: y + barHeight / 2 + 4,
-    class: 'pn-gantt-bar-label'
+    class: 'tl-gantt-bar-label'
   })
   label.textContent = task.title
   group.appendChild(label)
@@ -407,14 +407,14 @@ function renderBar(
     y,
     width: 6,
     height: barHeight,
-    class: 'pn-gantt-handle'
+    class: 'tl-gantt-handle'
   })
   const endHandle = svgEl('rect', {
     x: x + width - 6,
     y,
     width: 6,
     height: barHeight,
-    class: 'pn-gantt-handle'
+    class: 'tl-gantt-handle'
   })
   group.appendChild(startHandle)
   group.appendChild(endHandle)
@@ -430,7 +430,7 @@ function renderBar(
       endDay: bounds.end,
       rect
     }
-    document.body.addClass('pn-dragging')
+    document.body.addClass('tl-dragging')
   }
 
   const moveHandler = begin('move')
@@ -452,7 +452,7 @@ function renderBar(
 
 function renderArrows(
   svg: SVGSVGElement,
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   timeline: Timeline,
   rows: Task[]
 ): void {
@@ -461,18 +461,18 @@ function renderArrows(
 
   const defs = svgEl('defs')
   const marker = svgEl('marker', {
-    id: 'pn-arrowhead',
+    id: 'tl-arrowhead',
     markerWidth: 8,
     markerHeight: 8,
     refX: 6,
     refY: 3,
     orient: 'auto'
   })
-  marker.appendChild(svgEl('path', { d: 'M0,0 L0,6 L8,3 z', class: 'pn-gantt-arrowhead' }))
+  marker.appendChild(svgEl('path', { d: 'M0,0 L0,6 L8,3 z', class: 'tl-gantt-arrowhead' }))
   defs.appendChild(marker)
   svg.appendChild(defs)
 
-  const group = svgEl('g', { class: 'pn-gantt-arrows' })
+  const group = svgEl('g', { class: 'tl-gantt-arrows' })
 
   for (const task of rows) {
     const toRow = rowIndex.get(task.path)
@@ -499,8 +499,8 @@ function renderArrows(
       group.appendChild(
         svgEl('path', {
           d: `M ${fromX} ${fromY} C ${midX} ${fromY}, ${midX} ${toY}, ${toX} ${toY}`,
-          class: 'pn-gantt-arrow',
-          'marker-end': 'url(#pn-arrowhead)'
+          class: 'tl-gantt-arrow',
+          'marker-end': 'url(#tl-arrowhead)'
         })
       )
     }
@@ -509,7 +509,7 @@ function renderArrows(
 }
 
 async function commit(
-  plugin: ProjectNotesPlugin,
+  plugin: TruelinePlugin,
   autoSchedule: boolean,
   task: Task,
   startDay: number,
