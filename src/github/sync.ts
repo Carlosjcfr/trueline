@@ -50,6 +50,8 @@ export interface SyncReport {
   conflicts: string[]
   errors: string[]
   skippedNotModified: number
+  /** Repos with more changes than one pass reads; the next pass continues them. */
+  pending: string[]
 }
 
 export type SyncAction = 'none' | 'pull' | 'push' | 'conflict'
@@ -111,17 +113,23 @@ export interface SyncOptions {
 
 export class GitHubSync {
   private readonly client: GitHubClient
-  /** Per-repo high-water mark, so each poll asks only for what changed. */
-  private readonly lastPolled = new Map<string, string>()
   private running = false
   private backoffUntil = 0
 
+  /**
+   * @param persist saves the settings. The per-repo marks live there
+   *   (`github.lastPolled`) so they survive a restart; when they lived only in memory
+   *   every launch asked GitHub for everything again.
+   * @param client injectable for tests.
+   */
   constructor(
     private readonly app: App,
     private readonly tasks: TaskStore,
-    private readonly settings: () => TruelineSettings
+    private readonly settings: () => TruelineSettings,
+    private readonly persist: () => Promise<void>,
+    client?: GitHubClient
   ) {
-    this.client = new GitHubClient(this.settings().github.token)
+    this.client = client ?? new GitHubClient(this.settings().github.token)
   }
 
   setToken(token: string): void {
@@ -144,7 +152,8 @@ export class GitHubSync {
       created: 0,
       conflicts: [],
       errors: [],
-      skippedNotModified: 0
+      skippedNotModified: 0,
+      pending: []
     }
 
     if (this.running) {
@@ -187,21 +196,29 @@ export class GitHubSync {
     byRef: Map<string, Task>,
     report: SyncReport
   ): Promise<void> {
-    const result = await this.client.pollIssues(repo, this.lastPolled.get(repo))
+    const marks = this.settings().github.lastPolled
+    const result = await this.client.pollIssues(repo, marks[repo])
 
     if (result.retryAfter) {
       this.backoffUntil = Date.now() + result.retryAfter * 1000
       report.errors.push(`${repo}: límite de peticiones, esperando ${result.retryAfter}s.`)
-      return
+      // No early return: the pages read before the throttle are still applied below.
     }
     if (result.notModified) {
       report.skippedNotModified++
       return
     }
 
-    // Advance the mark only after a successful pass, so a mid-pass failure re-reads the
-    // same window next time instead of skipping issues we never applied.
-    let newest = this.lastPolled.get(repo)
+    // The mark only moves past an issue once it has been applied without error, and
+    // stops moving at the first one that fails. Issues are oldest first, so everything
+    // after the failure is re-read on the next pass - and that is safe, because every
+    // step here is idempotent: an issue already applied reconciles to "nothing to do",
+    // and an imported one is found by its gh-issue, written with the note itself.
+    //
+    // The previous version moved the mark to the newest issue it had *seen*, failures
+    // included, so a single failed issue was never retried.
+    let mark = marks[repo]
+    let failed = false
 
     for (const issue of result.issues) {
       const ref = formatIssueRef(repo, issue.number)
@@ -215,14 +232,19 @@ export class GitHubSync {
         } else {
           await this.reconcile(task, repo, issue, options, report)
         }
+        if (!failed && (!mark || issue.updated_at > mark)) mark = issue.updated_at
       } catch (error) {
+        failed = true
         report.errors.push(`${ref}: ${message(error)}`)
       }
-
-      if (!newest || issue.updated_at > newest) newest = issue.updated_at
     }
 
-    if (newest) this.lastPolled.set(repo, newest)
+    if (result.truncated && !result.retryAfter) report.pending.push(repo)
+
+    if (mark && mark !== marks[repo]) {
+      marks[repo] = mark
+      await this.persist()
+    }
   }
 
   /**
@@ -307,7 +329,10 @@ export class GitHubSync {
     const file = await createTask(this.app, settings, {
       title: issue.title,
       status: issue.state === 'closed' ? options.mapping.closeStatus : options.mapping.reopenStatus,
-      body: issueBody(issue)
+      body: issueBody(issue),
+      // Linked from the first write. If the patch below fails, the next pass finds this
+      // note by its gh-issue and adopts the issue instead of importing it a second time.
+      ghIssue: formatIssueRef(repo, issue.number)
     })
 
     // The store indexes on the metadata-cache event, which has not fired yet for a file
@@ -322,7 +347,6 @@ export class GitHubSync {
     const merged: Task = { ...task, ...patch }
     await this.tasks.update(task.path, {
       ...patch,
-      ghIssue: formatIssueRef(repo, issue.number),
       ghUpdatedAt: issue.updated_at,
       ghHash: syncedFingerprint(merged, options.mapping)
     })
@@ -384,6 +408,7 @@ export function describeReport(report: SyncReport): string {
   if (report.pushed) parts.push(`${report.pushed} enviadas a GitHub`)
   if (report.conflicts.length) parts.push(`${report.conflicts.length} conflictos`)
   if (report.errors.length) parts.push(`${report.errors.length} errores`)
+  if (report.pending.length) parts.push(`quedan cambios por traer en ${report.pending.join(', ')}`)
   return parts.length ? parts.join(', ') : 'Sin cambios'
 }
 

@@ -47,6 +47,7 @@ export class TruelineSettingTab extends PluginSettingTab {
           .onChange((value) => {
             settings.identification.mode = value as 'property' | 'tag'
             this.save()
+            this.plugin.applyIdentification()
             this.display()
           })
       )
@@ -57,6 +58,7 @@ export class TruelineSettingTab extends PluginSettingTab {
         text.setValue(settings.identification.key).onChange((value) => {
           settings.identification.key = value.trim()
           this.save()
+          this.plugin.applyIdentification()
         })
       )
 
@@ -66,8 +68,11 @@ export class TruelineSettingTab extends PluginSettingTab {
         .setDesc('Vacío acepta cualquier valor no vacío.')
         .addText((text) =>
           text.setValue(settings.identification.value ?? '').onChange((value) => {
-            settings.identification.value = value.trim() || undefined
+            // '' rather than undefined: JSON drops undefined, and the default would
+            // quietly come back on the next launch.
+            settings.identification.value = value.trim()
             this.save()
+            this.plugin.applyIdentification()
           })
         )
     }

@@ -8,7 +8,14 @@ import type { TaskIdentification } from './store/TaskStore'
 import type { ConflictPolicy, SyncDirection } from './github/sync'
 import { DEFAULT_SYNC_CONFIG, type GitHubSyncConfig } from './github/mapping'
 
+/**
+ * Bump when a stored setting changes meaning or shape, and add the step to `migrate`.
+ * Adding a new setting needs no bump: `loadSettings` fills it from the defaults.
+ */
+export const SETTINGS_VERSION = 1
+
 export interface TruelineSettings {
+  settingsVersion: number
   identification: TaskIdentification
   tasksFolder: string
   projectsFolder: string
@@ -42,6 +49,12 @@ export interface GitHubSettings {
   exportNewTasks: boolean
   syncOnStartup: boolean
   mapping: GitHubSyncConfig
+  /**
+   * Per-repo high-water mark: the `updated_at` of the last issue applied without error.
+   * Persisted so a restart resumes where the last session stopped instead of asking
+   * GitHub for every issue again.
+   */
+  lastPolled: Record<string, string>
 }
 
 export const DEFAULT_STATUSES: StatusConfig[] = [
@@ -67,7 +80,13 @@ export const DEFAULT_PRIORITIES: PriorityConfig[] = [
   { id: 'low', label: 'Baja', color: '#64748b', icon: 'chevron-down', weight: 10 }
 ]
 
-export const DEFAULT_SETTINGS: TruelineSettings = {
+/**
+ * Read-only template. Never hand this object out: use `defaultSettings()`, which
+ * returns a fresh copy. Handing it out is how editing a setting once silently changed
+ * the defaults for the rest of the session.
+ */
+export const DEFAULT_SETTINGS: Readonly<TruelineSettings> = {
+  settingsVersion: SETTINGS_VERSION,
   // Property mode by default: it is the only identification both TaskNotes and
   // Project Manager can be pointed at, so one vault serves all three plugins.
   identification: { mode: 'property', key: 'tl-task', value: 'true' },
@@ -92,8 +111,83 @@ export const DEFAULT_SETTINGS: TruelineSettings = {
     importNewIssues: true,
     exportNewTasks: false,
     syncOnStartup: true,
-    mapping: DEFAULT_SYNC_CONFIG
+    mapping: DEFAULT_SYNC_CONFIG,
+    lastPolled: {}
   }
+}
+
+export function defaultSettings(): TruelineSettings {
+  return structuredClone(DEFAULT_SETTINGS) as TruelineSettings
+}
+
+/**
+ * Builds the live settings from whatever `loadData()` returned.
+ *
+ * `Object.assign({}, DEFAULT_SETTINGS, saved)` - what this replaced - only merges the
+ * top level. A data.json written before `github.mapping` existed then replaced the
+ * whole `github` object, leaving `mapping` undefined and the settings tab throwing a
+ * TypeError on open. The rules here:
+ *
+ *  - start from a fresh copy of the defaults, so nothing the user edits can leak back
+ *    into them;
+ *  - merge plain objects key by key, at every depth;
+ *  - take arrays and scalars from the saved data whole - a status list is replaced,
+ *    never interleaved with the default one;
+ *  - ignore a saved value whose type does not match the default, rather than letting
+ *    one hand-edited typo take the plugin down;
+ *  - keep saved keys the defaults do not know about, so a data.json written by a newer
+ *    version survives a round trip through an older one.
+ */
+export function loadSettingsFrom(saved: unknown): TruelineSettings {
+  const base = defaultSettings()
+  if (!isPlainObject(saved)) return base
+  const migrated = migrate(structuredClone(saved))
+  const merged = mergeInto(base as unknown as Record<string, unknown>, migrated)
+  merged.settingsVersion = SETTINGS_VERSION
+  return merged as unknown as TruelineSettings
+}
+
+/**
+ * One step per version. Each receives the data as the previous version wrote it.
+ * Version 0 is everything saved before `settingsVersion` existed.
+ */
+function migrate(saved: Record<string, unknown>): Record<string, unknown> {
+  const version = typeof saved.settingsVersion === 'number' ? saved.settingsVersion : 0
+
+  if (version < 1) {
+    // Before v1 an empty "expected value" was stored as undefined, which JSON drops,
+    // so there is nothing to recover; from v1 it is stored as ''.
+  }
+
+  return saved
+}
+
+function mergeInto(
+  base: Record<string, unknown>,
+  saved: Record<string, unknown>
+): Record<string, unknown> {
+  for (const [key, value] of Object.entries(saved)) {
+    if (!(key in base)) {
+      base[key] = value
+      continue
+    }
+    const current = base[key]
+    if (isPlainObject(current) && isPlainObject(value)) {
+      base[key] = mergeInto(current, value)
+    } else if (sameKind(current, value)) {
+      base[key] = value
+    }
+  }
+  return base
+}
+
+function sameKind(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b)
+  return typeof a === typeof b
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 export function statusConfig(

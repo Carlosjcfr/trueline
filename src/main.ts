@@ -1,5 +1,5 @@
-import { Plugin, TFile, type CachedMetadata, type WorkspaceLeaf } from 'obsidian'
-import { DEFAULT_SETTINGS, type TruelineSettings } from './settings'
+import { Plugin, TFile, debounce, type CachedMetadata, type WorkspaceLeaf } from 'obsidian'
+import { defaultSettings, loadSettingsFrom, type TruelineSettings } from './settings'
 import { TaskStore } from './store/TaskStore'
 import { ProjectStore } from './store/ProjectStore'
 import { ProjectView, PROJECT_VIEW_TYPE } from './views/ProjectView'
@@ -10,7 +10,7 @@ import { TimerService } from './ui/TimerService'
 import { TruelineSettingTab } from './settings/SettingsTab'
 
 export default class TruelinePlugin extends Plugin {
-  override settings: TruelineSettings = DEFAULT_SETTINGS
+  override settings: TruelineSettings = defaultSettings()
   tasks!: TaskStore
   projects!: ProjectStore
   github: GitHubSync | null = null
@@ -76,7 +76,9 @@ export default class TruelinePlugin extends Plugin {
       callback: () => void this.createAndOpenTask()
     })
 
-    this.github = new GitHubSync(this.app, this.tasks, () => this.settings)
+    this.github = new GitHubSync(this.app, this.tasks, () => this.settings, () =>
+      this.saveSettings()
+    )
 
     this.addCommand({
       id: 'toggle-timer',
@@ -152,8 +154,23 @@ export default class TruelinePlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
+    this.settings = loadSettingsFrom(await this.loadData())
   }
+
+  /**
+   * Re-indexes with the identification currently in the settings. Debounced because
+   * the settings tab calls it on every keystroke, and each call is a full vault scan:
+   * typing `pm-task` would otherwise scan the vault six times.
+   */
+  readonly applyIdentification = debounce(
+    () => {
+      this.tasks.setOptions({ identification: this.settings.identification })
+      this.projects.rebuild()
+      this.timer.adoptRunning()
+    },
+    500,
+    true
+  )
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings)

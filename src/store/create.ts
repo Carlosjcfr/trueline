@@ -12,6 +12,12 @@ export interface NewTaskInput {
   due?: string
   projects?: string[]
   body?: string
+  /**
+   * Written with the note rather than patched in afterwards. An import that wrote it
+   * in a second step left an unlinked note behind whenever that step failed, and the
+   * next sync pass imported the same issue again.
+   */
+  ghIssue?: string
 }
 
 /**
@@ -49,6 +55,7 @@ export async function createTask(
     skippedInstances: [],
     assignees: [],
     customFields: {},
+    ghIssue: input.ghIssue,
     unknown: {},
     archived: false
   }
@@ -57,7 +64,7 @@ export async function createTask(
   const frontmatter = serializeTask(task)
   const identification = settings.identification
   if (identification.mode === 'property') {
-    frontmatter[identification.key] = coerce(identification.value ?? 'true')
+    frontmatter[identification.key] = coerce(identification.value || 'true')
   } else {
     frontmatter.tags = [identification.key]
   }

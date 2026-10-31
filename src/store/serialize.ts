@@ -40,6 +40,11 @@ export interface ParseContext {
   mapping?: FieldMapping
   /** Generated only when the file carries no stable id yet. */
   generateId: () => string
+  /**
+   * The task this file parsed to last time, if any. Supplies the id and dates when the
+   * frontmatter has none, so they do not change on every parse.
+   */
+  previous?: Task
 }
 
 export function parseTask(
@@ -58,14 +63,14 @@ export function parseTask(
   const now = new Date().toISOString()
 
   const task: Task = {
-    id: str(read('id')) ?? ctx.generateId(),
+    id: str(read('id')) ?? ctx.previous?.id ?? ctx.generateId(),
     path: ctx.path,
     // §2.2.2: mapped title wins under `frontmatter` storage, basename is the fallback.
     title: str(read('title')) ?? ctx.basename,
     status: str(read('status')) ?? 'open',
     completedDate: str(read('completed_date')),
-    dateCreated: str(read('date_created')) ?? now,
-    dateModified: str(read('date_modified')) ?? now,
+    dateCreated: str(read('date_created')) ?? ctx.previous?.dateCreated ?? now,
+    dateModified: str(read('date_modified')) ?? ctx.previous?.dateModified ?? now,
 
     priority: str(read('priority')),
     scheduled: str(read('scheduled')),

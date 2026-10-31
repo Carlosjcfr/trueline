@@ -11,9 +11,21 @@
  *    place. Rewriting the file ourselves would mean re-serializing the body, and the
  *    body is where the user's actual notes live.
  *
- *  - We never write in response to our own write. `pendingWrites` holds the paths we
- *    are touching so the metadata-change callback can ignore the echo; without it the
- *    store and the plugins reading the same file feed each other forever.
+ *  - A change that does not change the task is not a change. Every write we make
+ *    comes back as a metadata event once Obsidian reparses the file, and so does every
+ *    autosave while you type in a task's body. Both re-parse to the same task, so
+ *    `ingest` compares the result with what it already holds and stays quiet when they
+ *    match: no event, no repaint.
+ *
+ *    An earlier version tried to skip our own echoes with a set of paths being written,
+ *    cleared in a `finally` after `processFrontMatter` resolved. It never matched: the
+ *    metadata event arrives later, when Obsidian finishes reparsing asynchronously, by
+ *    which time the path was already gone from the set. Comparing content does not
+ *    depend on timing, and it also catches the body edits the path set never could.
+ *
+ *    Note what this guard is *not*: the GitHub bridge's protection against write loops.
+ *    That comes from `gh-hash` and `gh-updated-at` (see github/sync.ts), and holds even
+ *    when an echo does get through.
  */
 
 import type { App, CachedMetadata, TFile } from 'obsidian'
@@ -28,7 +40,7 @@ export interface TaskIdentification {
   mode: 'property' | 'tag'
   /** Property key, or tag name without `#`. */
   key: string
-  /** Property mode only. Omit to accept any truthy value. */
+  /** Property mode only. Empty or absent accepts any non-empty value. */
   value?: string
 }
 
@@ -41,37 +53,54 @@ export interface TaskStoreOptions {
 
 export type StoreEvent = 'changed'
 
+/** What a single ingest did, so callers emit only when something visible happened. */
+type IngestResult = 'changed' | 'unchanged' | 'removed' | 'absent'
+
 export class TaskStore {
   private readonly byPath = new Map<string, Task>()
   private readonly byId = new Map<string, Task>()
   private readonly listeners = new Set<() => void>()
-  private readonly pendingWrites = new Set<string>()
   private readonly mapping: FieldMapping
+  private options: TaskStoreOptions
 
   constructor(
     private readonly app: App,
-    private options: TaskStoreOptions
+    options: TaskStoreOptions
   ) {
+    // Copied, not aliased. Holding the settings object itself meant a change made in
+    // the settings tab half-applied: new notes were judged by the new key, the notes
+    // already indexed by the old one, and nothing re-scanned until a restart.
+    this.options = structuredClone(options)
     this.mapping = options.mapping ?? DEFAULT_MAPPING
+  }
+
+  /**
+   * Applies new options and re-indexes the vault. The only way to change how tasks are
+   * identified; see the constructor for why it cannot happen by mutation.
+   */
+  setOptions(options: Partial<TaskStoreOptions>): void {
+    this.options = { ...this.options, ...structuredClone(options) }
+    this.rebuild()
   }
 
   // -- lifecycle -----------------------------------------------------------
 
   /** Full scan. Cheap enough to run on load: it reads the metadata cache, not disk. */
   rebuild(): void {
+    // Kept so a re-scan does not hand fresh ids and dates to notes that carry none in
+    // their frontmatter; see `ingest`.
+    const previous = new Map(this.byPath)
     this.byPath.clear()
     this.byId.clear()
     for (const file of this.app.vault.getMarkdownFiles()) {
-      this.ingest(file)
+      this.ingest(file, undefined, previous.get(file.path))
     }
     this.emit()
   }
 
   onFileChanged(file: TFile, _data: string, cache: CachedMetadata): void {
-    if (this.pendingWrites.has(file.path)) return
-    const had = this.byPath.has(file.path)
-    const has = this.ingest(file, cache)
-    if (had || has) this.emit()
+    const result = this.ingest(file, cache)
+    if (result === 'changed' || result === 'removed') this.emit()
   }
 
   onFileDeleted(path: string): void {
@@ -170,18 +199,15 @@ export class TaskStore {
 
     const frontmatter = serializeTask(next, declaredFieldKeys, this.mapping)
 
-    this.pendingWrites.add(path)
-    try {
-      await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
-        for (const key of Object.keys(fm)) {
-          if (!(key in frontmatter)) delete fm[key]
-        }
-        Object.assign(fm, frontmatter)
-      })
-    } finally {
-      this.pendingWrites.delete(path)
-    }
+    await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+      for (const key of Object.keys(fm)) {
+        if (!(key in frontmatter)) delete fm[key]
+      }
+      Object.assign(fm, frontmatter)
+    })
 
+    // Indexed now rather than on the echo, so a caller that reads straight after the
+    // write sees it. The echo then re-parses to this same task and is ignored.
     this.byPath.set(path, next)
     this.byId.set(next.id, next)
     this.emit()
@@ -200,12 +226,16 @@ export class TaskStore {
 
   // -- internals -----------------------------------------------------------
 
-  /** Returns true when the file is (still) a task. */
-  private ingest(file: TFile, cache?: CachedMetadata): boolean {
+  private ingest(
+    file: TFile,
+    cache?: CachedMetadata,
+    previous: Task | undefined = this.byPath.get(file.path)
+  ): IngestResult {
     const meta = cache ?? this.app.metadataCache.getFileCache(file)
     if (!meta || !this.isTask(meta)) {
+      if (!this.byPath.has(file.path)) return 'absent'
       this.onFileDeletedQuiet(file.path)
-      return false
+      return 'removed'
     }
 
     const frontmatter = (meta.frontmatter ?? {}) as Record<string, unknown>
@@ -213,12 +243,22 @@ export class TaskStore {
       path: file.path,
       basename: file.basename,
       mapping: this.mapping,
+      // A note with no `id` or dates in its frontmatter gets them invented on parse.
+      // Reusing what we invented last time keeps them stable for the session; without
+      // it every autosave minted a new id, and no re-parse ever compared equal.
+      previous,
       generateId: () => makeId(file.basename)
     })
 
+    const indexed = this.byPath.get(file.path)
+    if (indexed && sameTask(indexed, task, this.mapping)) return 'unchanged'
+
+    if (indexed && indexed.id !== task.id && this.byId.get(indexed.id) === indexed) {
+      this.byId.delete(indexed.id)
+    }
     this.byPath.set(file.path, task)
     this.byId.set(task.id, task)
-    return true
+    return 'changed'
   }
 
   private onFileDeletedQuiet(path: string): void {
@@ -251,7 +291,32 @@ const LEGACY_TASK_KEYS: Record<string, string> = { 'tl-task': 'pn-task' }
 
 function matchesProperty(raw: unknown, value: string | undefined): boolean {
   if (raw === undefined || raw === null || raw === false || raw === '') return false
-  return value === undefined || String(raw) === value
+  // Empty means "any value": it is stored as '' because JSON cannot store undefined,
+  // and an undefined dropped from data.json would come back as the default 'true'.
+  return !value || String(raw) === value
+}
+
+/**
+ * Two parses of the same file describe the same task when everything we would write
+ * back is identical. Comparing the serialized form, not the objects, ignores what is
+ * not persisted (the body, field order) and counts what is (unknown keys included).
+ */
+function sameTask(a: Task, b: Task, mapping: FieldMapping): boolean {
+  if (a.path !== b.path) return false
+  return (
+    stableStringify(serializeTask(a, [], mapping)) ===
+    stableStringify(serializeTask(b, [], mapping))
+  )
+}
+
+/** JSON with object keys sorted, so key order in the YAML cannot make equal look unequal. */
+function stableStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, item: unknown) => {
+    if (item === null || typeof item !== 'object' || Array.isArray(item)) return item
+    return Object.fromEntries(
+      Object.entries(item as Record<string, unknown>).sort(([x], [y]) => (x < y ? -1 : 1))
+    )
+  })
 }
 
 /**

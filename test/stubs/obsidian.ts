@@ -28,3 +28,16 @@ export function parseLinktext(text: string): { path: string; subpath: string } {
 export function requestUrl(): never {
   throw new Error('requestUrl is not available in tests; stub the client instead.')
 }
+
+/** Real enough for code under test: runs `fn` on the trailing edge after `wait` ms. */
+export function debounce<T extends unknown[]>(fn: (...args: T) => void, wait = 0) {
+  let handle: ReturnType<typeof setTimeout> | undefined
+  const wrapped = (...args: T): void => {
+    if (handle) clearTimeout(handle)
+    handle = setTimeout(() => fn(...args), wait)
+  }
+  return Object.assign(wrapped, {
+    cancel: () => handle && clearTimeout(handle),
+    run: () => undefined
+  })
+}
